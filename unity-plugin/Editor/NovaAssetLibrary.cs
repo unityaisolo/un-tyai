@@ -56,7 +56,8 @@ namespace UnityAI
         {
             // 1) Kullanıcının kaydettiği yol
             var saved = SavedPath;
-            if (!string.IsNullOrEmpty(saved) && File.Exists(saved)) return saved;
+            if (!string.IsNullOrEmpty(saved) && File.Exists(saved) && !IsDevPathUnderSimulation(saved))
+                return saved;
 
             if (!_missCached)
             {
@@ -90,6 +91,27 @@ namespace UnityAI
         {
             get => EditorPrefs.GetBool(CleanKey, false);
             set { EditorPrefs.SetBool(CleanKey, value); _missCached = false; }
+        }
+
+        /// <summary>
+        /// Simülasyon açıkken PROJE DIŞINDAKİ kayıtlı yolu yok say.
+        ///
+        /// Neden gerekli: kayıtlı yol aday taramasından ÖNCE kontrol ediliyor. Sadece
+        /// taramayı kısıtlamak yetmedi — önceki çalıştırmada kaydedilmiş geliştirici yolu
+        /// hâlâ kazanıyordu ve "temiz kurulum" testi yine yerelden okuyordu. Kayıt
+        /// EditorPrefs'te tutulduğu için proje değiştirmek de temizlemiyor.
+        /// </summary>
+        private static bool IsDevPathUnderSimulation(string path)
+        {
+            if (!SimulateCleanInstall) return false;
+            try
+            {
+                string projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
+                string full = Path.GetFullPath(path);
+                // Proje kökünün altındaysa gerçek bir son-kullanıcı konumudur, kabul et.
+                return !full.StartsWith(Path.GetFullPath(projectRoot), StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return true; }   // emin olamıyorsak simülasyonu bozma
         }
 
         /// <summary>Aranacak olası konumlar (sırayla).</summary>
