@@ -72,6 +72,26 @@ namespace UnityAI
         /// <summary>Aramayı sıfırlar (indirme/klasör seçimi sonrası).</summary>
         public static void ForgetSearch() => _missCached = false;
 
+        private const string CleanKey = "UnityAI.SimulateCleanInstall";
+
+        /// <summary>
+        /// TEMİZ KURULUM SİMÜLASYONU — yalnızca geliştirici için.
+        ///
+        /// NEDEN VAR: aşağıdaki adım 4/5 "geliştirici düzeni"ni tarar. Bu, deponun yanında
+        /// çalışırken hayat kurtarıyor ama GELİŞTİRİCİNİN MAKİNESİNDE bulut akışını test
+        /// etmeyi imkânsız kılıyor: yeni bir projede bile tarama repodaki catalog.json'u
+        /// buluyor ve indirme hiç denenmiyor. Sahada tam olarak bu yaşandı — "temiz kurulum"
+        /// sanılan test aslında yerel klasörden okuyordu.
+        ///
+        /// Bu bayrak açıkken yalnızca son kullanıcının görebileceği konumlara bakılır
+        /// (proje içi NovaAssets). Böylece bulut indirme gerçekten sınanır.
+        /// </summary>
+        public static bool SimulateCleanInstall
+        {
+            get => EditorPrefs.GetBool(CleanKey, false);
+            set { EditorPrefs.SetBool(CleanKey, value); _missCached = false; }
+        }
+
         /// <summary>Aranacak olası konumlar (sırayla).</summary>
         private static System.Collections.Generic.IEnumerable<string> Candidates()
         {
@@ -82,6 +102,9 @@ namespace UnityAI
 
             // 3) Assets altında NovaAssets klasörü (kullanıcı elle koyduysa)
             yield return Path.Combine(Application.dataPath, FolderName, "catalog.json");
+
+            // Temiz kurulum simülasyonu: son kullanıcıda olmayan konumlara BAKMA.
+            if (SimulateCleanInstall) yield break;
 
             // 4) Geliştirici düzeni: proje kökünden yukarı 4 seviye tara.
             //    Unity projesi deponun yanında/içinde/altında olabilir; sabit tek seviye yetmez.
@@ -284,8 +307,35 @@ namespace UnityAI
             ForgetSearch();
             _promptedThisSession = false;
             NovaAssetDownloader.ResetCache();
-            Debug.Log("[Nova] Asset kütüphanesi kaydı silindi. Sonraki kurulumda yol yeniden aranacak. " +
-                      "Yerel klasör bulunmazsa bulut akışı devreye girer. İndirme hedefi: " + DownloadRoot);
+            // Sıfırlama TEK BAŞINA yetmiyordu: tarama geliştirici klasörünü anında yeniden
+            // buluyor, bulut akışı yine denenmiyordu. Bu yüzden simülasyonu da açıyoruz.
+            SimulateCleanInstall = true;
+            Debug.Log("[Nova] Asset kütüphanesi kaydı silindi ve TEMİZ KURULUM SİMÜLASYONU açıldı — " +
+                      "geliştirici klasörleri artık taranmıyor, bulut akışı devreye girecek. " +
+                      "İndirme hedefi: " + DownloadRoot + "\n" +
+                      "Kapatmak için: UnityAI ▸ Temiz Kurulum Simülasyonu");
+        }
+
+        /// <summary>
+        /// Simülasyonu aç/kapat. Açıkken geliştirici klasörleri taranmaz; kapalıyken
+        /// depo yanındaki catalog.json yeniden bulunur (günlük geliştirme için).
+        /// </summary>
+        [MenuItem("UnityAI/Temiz Kurulum Simülasyonu", false, 203)]
+        private static void MenuToggleClean()
+        {
+            SimulateCleanInstall = !SimulateCleanInstall;
+            SavedPath = "";                 // eski yol kayıtlıysa simülasyonu delerdi
+            NovaAssetDownloader.ResetCache();
+            Debug.Log(SimulateCleanInstall
+                ? "[Nova] Temiz kurulum simülasyonu AÇIK — yalnızca proje içi NovaAssets klasörüne bakılır."
+                : "[Nova] Temiz kurulum simülasyonu KAPALI — geliştirici klasörleri yeniden taranacak.");
+        }
+
+        [MenuItem("UnityAI/Temiz Kurulum Simülasyonu", true)]
+        private static bool MenuToggleCleanValidate()
+        {
+            Menu.SetChecked("UnityAI/Temiz Kurulum Simülasyonu", SimulateCleanInstall);
+            return true;
         }
 
         [MenuItem("UnityAI/Asset Kütüphanesi…", false, 200)]
