@@ -1,0 +1,22 @@
+{
+  "name": "asset-pipeline",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "fetch:polypizza": "node fetch-polypizza.mjs",
+    "fetch:sketchfab": "node fetch-sketchfab.mjs",
+    "fetch:ambientcg": "node fetch-ambientcg.mjs",
+    "fetch:polyhaven": "node fetch-polyhaven.mjs",
+    "fetch:all": "node fetch-polypizza.mjs && node fetch-sketchfab.mjs && node fetch-ambientcg.mjs && node fetch-polyhaven.mjs",
+    "validate": "node validate.mjs",
+    "ingest": "node ingest.mjs",
+    "build": "node validate.mjs && node ingest.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@gltf-transform/core": "^4.4.1"
+  }
+}

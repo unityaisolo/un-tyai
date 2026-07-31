@@ -1,0 +1,818 @@
+/* ═══════════════════════════════════════════════════════════════════
+   NOVA · UnityAI — v2 "Neon Tech" tasarım sistemi
+   Koyu: derin lacivert + cyan aksan  ·  Açık: buz beyazı + petrol cyan
+   Tema değişkenleri: .root (koyu) / .root.light (açık)
+   ═══════════════════════════════════════════════════════════════════ */
+.root {
+    --accent: #22d3ee;
+    --accent-hover: #67e8f9;
+    --accent-soft: rgba(34, 211, 238, 0.12);
+    --accent-glow: rgba(34, 211, 238, 0.4);
+    --bg: #070b14;
+    --panel: #0d1522;
+    --panel-2: #16202f;
+    --viewport: #04070d;
+    --text: #e6f1f7;
+    --muted: #7b8ba1;
+    --border: rgba(140, 180, 255, 0.1);
+    --border-strong: rgba(140, 180, 255, 0.22);
+    --danger: #ff5c7a;
+    --success: #34d399;
+    --on-accent: #04121a;
+
+    flex-grow: 1;
+    padding: 14px;
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.35s ease;
+}
+
+.root.light {
+    --accent: #0891b2;
+    --accent-hover: #06758f;
+    --accent-soft: rgba(8, 145, 178, 0.1);
+    --accent-glow: rgba(8, 145, 178, 0.35);
+    --bg: #eef3f8;
+    --panel: #ffffff;
+    --panel-2: #e4ecf4;
+    --viewport: #dde7f0;
+    --text: #0c1a26;
+    --muted: #5c6c80;
+    --border: rgba(12, 40, 70, 0.1);
+    --border-strong: rgba(12, 40, 70, 0.22);
+    --danger: #d6335c;
+    --success: #0e9f6e;
+    --on-accent: #ffffff;
+}
+
+.spacer { flex-grow: 1; }
+
+/* ═══════════ HEADER ═══════════ */
+.header {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background-color: var(--accent-soft);
+    border-width: 1px;
+    border-color: var(--accent-glow);
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    transition: scale 0.15s ease, border-color 0.2s ease;
+}
+.logo:hover { scale: 1.08 1.08; border-color: var(--accent); }
+
+.logo-glyph {
+    font-size: 16px;
+    color: var(--accent);
+    -unity-font-style: bold;
+}
+
+.brand { flex-direction: column; }
+.brand-row { flex-direction: row; align-items: center; }
+
+.title {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: var(--text);
+    letter-spacing: 3px;
+}
+
+.title-badge {
+    font-size: 9px;
+    -unity-font-style: bold;
+    color: var(--accent);
+    background-color: var(--accent-soft);
+    border-radius: 20px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 1px;
+}
+
+/* Bağlantı durumu + sunucu */
+.conn {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 1;
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--border);
+    border-radius: 20px;
+    padding: 2px 10px 2px 12px;
+    margin-right: 8px;
+    transition: border-color 0.2s ease;
+}
+.conn:hover { border-color: var(--border-strong); }
+
+.conn-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 4px;
+    background-color: var(--success);
+    margin-right: 8px;
+}
+
+.server {
+    min-width: 90px;
+    max-width: 190px;
+    flex-shrink: 1;
+    font-size: 10px;
+}
+.server .unity-base-text-field__input {
+    background-color: transparent;
+    border-width: 0;
+    color: var(--muted);
+    padding: 3px 0;
+}
+
+.cost {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+    -unity-font-style: bold;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border-width: 1px;
+    border-color: var(--accent-glow);
+}
+
+.theme-btn {
+    background-color: transparent;
+    color: var(--muted);
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 20px;
+    padding: 5px 14px;
+    margin-left: 8px;
+    font-size: 11px;
+    transition: background-color 0.15s ease, color 0.15s ease, scale 0.1s ease;
+}
+.theme-btn:hover { background-color: var(--panel-2); color: var(--text); scale: 1.05 1.05; }
+.theme-btn:active { scale: 0.95 0.95; }
+
+/* ═══════════ SEKMELER (segment kontrol) ═══════════ */
+.tabbar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.tabs {
+    flex-direction: row;
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--border);
+    border-radius: 12px;
+    padding: 3px;
+}
+
+.tab {
+    background-color: transparent;
+    color: var(--muted);
+    border-width: 0;
+    border-radius: 9px;
+    padding: 7px 18px;
+    margin: 0;
+    font-size: 12px;
+    transition: background-color 0.2s ease, color 0.2s ease, scale 0.1s ease;
+}
+.tab:hover { color: var(--text); background-color: var(--panel-2); scale: 1.03 1.03; }
+.tab:active { scale: 0.96 0.96; }
+
+.tab-active {
+    background-color: var(--accent);
+    color: var(--on-accent);
+    -unity-font-style: bold;
+}
+.tab-active:hover { color: var(--on-accent); }
+
+.newchat {
+    background-color: transparent;
+    color: var(--text);
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 10px;
+    padding: 7px 14px;
+    font-size: 11px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, scale 0.1s ease;
+}
+.newchat:hover { background-color: var(--panel-2); border-color: var(--accent-glow); scale: 1.03 1.03; }
+.newchat:active { scale: 0.96 0.96; }
+
+/* ═══════════ PANELLER ═══════════ */
+.panel { flex-grow: 1; }
+
+.panel-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.panel-title {
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: var(--accent);
+    letter-spacing: 2px;
+}
+
+.panel-hint {
+    font-size: 10px;
+    color: var(--muted);
+}
+
+/* ═══════════ TEXT INPUT ═══════════ */
+.unity-base-text-field__input {
+    background-color: var(--panel-2);
+    border-color: var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    padding: 6px 10px;
+    transition: border-color 0.2s ease;
+}
+.unity-base-text-field__input:focus {
+    border-color: var(--accent);
+}
+
+/* ═══════════ SOHBET ═══════════ */
+.messages {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 100px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--border);
+    padding: 12px;
+    transition: background-color 0.35s ease;
+}
+
+.msg {
+    margin-bottom: 10px;
+    padding: 10px 13px;
+    border-radius: 13px;
+    background-color: var(--panel-2);
+    max-width: 86%;
+    opacity: 0;
+    translate: 0 10px;
+    scale: 0.98 0.98;
+    transition: opacity 0.25s ease-out, translate 0.25s ease-out, scale 0.25s ease-out;
+}
+.msg-in { opacity: 1; translate: 0 0; scale: 1 1; }
+
+.msg-user {
+    background-color: var(--accent-soft);
+    border-width: 1px;
+    border-color: var(--accent-glow);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+.msg-nova {
+    background-color: var(--panel-2);
+    border-width: 1px;
+    border-color: var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.msg-tool {
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--border);
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 7px 11px;
+}
+
+.msg-sender {
+    font-size: 9px;
+    -unity-font-style: bold;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.msg-tool .msg-sender { color: var(--muted); }
+
+.msg-body {
+    white-space: normal;
+    color: var(--text);
+    font-size: 12px;
+}
+
+/* Sohbete gömülü kod onay bölümü (diff varken görünür) */
+.code-section {
+    max-height: 260px;
+    margin-bottom: 12px;
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--accent-glow);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+.code-list {
+    flex-grow: 1;
+    max-height: 210px;
+}
+
+/* Composer: giriş + kontroller tek kart */
+.composer {
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--border);
+    border-radius: 14px;
+    padding: 8px;
+    flex-shrink: 0;              /* mesaj listesi büyüyünce ezilmesin (üst üste binme hatası) */
+    transition: border-color 0.2s ease, background-color 0.35s ease;
+}
+.composer:hover { border-color: var(--border-strong); }
+
+.input-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* Yuvarlak ikon düğmeleri: +  ≡  ✕ */
+.icon-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    margin: 0 6px 0 0;
+    padding: 0;
+    background-color: var(--panel-2);
+    color: var(--text);
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 15px;
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    transition: background-color 0.15s ease, scale 0.1s ease;
+}
+.icon-btn:hover { background-color: var(--accent); color: var(--on-accent); scale: 1.06 1.06; }
+.icon-btn:active { scale: 0.94 0.94; }
+
+.chat-input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 80px;
+    min-height: 34px;
+    max-height: 90px;
+    margin-right: 8px;
+}
+.chat-input .unity-base-text-field__input {
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: var(--border-strong);
+    background-color: var(--panel-2);
+    padding: 7px 10px;
+}
+.chat-input .unity-base-text-field__input {
+    background-color: transparent;
+    border-width: 0;
+    font-size: 12px;
+}
+
+.controls {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    padding: 4px 6px 2px 6px;
+    border-top-width: 1px;
+    border-top-color: var(--border);
+}
+.auto-approve { font-size: 10px; color: var(--muted); margin-right: 14px; }
+.model { min-width: 150px; font-size: 10px; }
+.model .unity-base-popup-field__input {
+    background-color: var(--panel-2);
+    border-color: var(--border);
+    border-radius: 8px;
+    color: var(--text);
+}
+
+/* ═══════════ BUTONLAR ═══════════ */
+.submit {
+    background-color: var(--accent);
+    color: var(--on-accent);
+    border-width: 0;
+    border-radius: 10px;
+    padding: 9px 20px;
+    -unity-font-style: bold;
+    font-size: 12px;
+    transition: background-color 0.15s ease, scale 0.1s ease;
+}
+.submit:hover { background-color: var(--accent-hover); scale: 1.04 1.04; }
+.submit:active { scale: 0.95 0.95; }
+
+.ghost-btn {
+    background-color: transparent;
+    color: var(--muted);
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 10px;
+    padding: 7px 14px;
+    font-size: 11px;
+    margin-right: 6px;
+    transition: background-color 0.15s ease, color 0.15s ease, scale 0.1s ease;
+}
+.ghost-btn:hover { background-color: var(--panel-2); color: var(--text); scale: 1.03 1.03; }
+.ghost-btn:active { scale: 0.96 0.96; }
+
+.status {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    padding: 0 4px;
+    -unity-text-align: middle-left;
+    white-space: normal;
+}
+
+/* Sohbet boşken gösterilen sessiz karşılama */
+.empty-hint {
+    -unity-text-align: middle-center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 60px;
+    opacity: 0.7;
+    white-space: normal;
+}
+
+/* ═══════════ KOD / DIFF ═══════════ */
+.edit-card {
+    border-width: 1px;
+    border-color: var(--border);
+    border-left-width: 3px;
+    border-left-color: var(--accent);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    padding: 12px;
+    background-color: var(--panel-2);
+    transition: border-color 0.2s ease;
+}
+.edit-card:hover { border-color: var(--border-strong); border-left-color: var(--accent); }
+
+.edit-path {
+    -unity-font-style: bold;
+    font-size: 11px;
+    margin-bottom: 8px;
+    color: var(--accent);
+}
+.diff-line { font-size: 11px; white-space: nowrap; padding: 1px 4px; border-radius: 3px; }
+.diff-add { background-color: rgba(52, 211, 153, 0.13); color: var(--success); }
+.diff-del { background-color: rgba(255, 92, 122, 0.13); color: var(--danger); }
+.diff-ctx { color: var(--muted); }
+
+.edit-actions { flex-direction: row; margin-top: 10px; }
+.btn-apply {
+    background-color: var(--success);
+    color: #ffffff;
+    border-width: 0;
+    border-radius: 9px;
+    padding: 7px 16px;
+    -unity-font-style: bold;
+    transition: scale 0.1s ease, background-color 0.15s ease;
+}
+.btn-apply:hover { scale: 1.04 1.04; }
+.btn-apply:active { scale: 0.95 0.95; }
+.btn-reject {
+    background-color: transparent;
+    color: var(--danger);
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 9px;
+    padding: 7px 16px;
+    margin-left: 8px;
+    transition: scale 0.1s ease, border-color 0.15s ease;
+}
+.btn-reject:hover { border-color: var(--danger); scale: 1.03 1.03; }
+.btn-reject:active { scale: 0.95 0.95; }
+
+/* ═══════════ 3D STÜDYO ═══════════ */
+.studio-main {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-grow: 1;
+    margin-bottom: 10px;
+}
+
+/* Viewport: HUD köşe braketleri ile teknolojik görünüm */
+.viewport {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 300px;
+    min-width: 220px;
+    min-height: 220px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: var(--border-strong);
+    background-color: var(--viewport);
+    transition: border-color 0.25s ease;
+    overflow: hidden;
+}
+.viewport:hover { border-color: var(--accent-glow); }
+
+.preview {
+    flex-grow: 1;
+    min-height: 240px;
+}
+
+.vp-corner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-color: var(--accent);
+}
+.vp-tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 6px; }
+.vp-tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 6px; }
+.vp-bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 6px; }
+.vp-br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 6px; }
+
+.vp-hud {
+    position: absolute;
+    top: 14px;
+    left: 36px;
+    font-size: 9px;
+    -unity-font-style: bold;
+    color: var(--accent);
+    letter-spacing: 2px;
+}
+
+.vp-status {
+    position: absolute;
+    bottom: 14px;
+    left: 36px;
+    font-size: 9px;
+    color: var(--muted);
+}
+
+/* Model bilgi paneli */
+.stats-panel {
+    min-width: 176px;
+    flex-basis: 196px;
+    flex-grow: 1;
+    max-width: 260px;
+    margin-left: 10px;
+    margin-bottom: 4px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: var(--border);
+    background-color: var(--panel);
+    padding: 14px;
+    transition: background-color 0.35s ease;
+}
+.stat-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background-color: var(--panel-2);
+}
+.stat-key { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+.stat-val { font-size: 11px; -unity-font-style: bold; color: var(--text); -unity-text-align: middle-right; }
+
+.studio-actions {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+/* Alt kartlar: Düzenle / Yeni model */
+.studio-card {
+    background-color: var(--panel);
+    border-width: 1px;
+    border-color: var(--border);
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    transition: border-color 0.2s ease, background-color 0.35s ease;
+}
+.studio-card:hover { border-color: var(--border-strong); }
+
+.card-label {
+    font-size: 8px;
+    -unity-font-style: bold;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.card-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.studio-prompt { flex-grow: 1; flex-shrink: 1; min-width: 140px; min-height: 30px; margin-right: 8px; }
+.studio-prompt .unity-base-text-field__input { font-size: 11px; }
+.studio-image { min-width: 110px; max-width: 190px; flex-shrink: 1; min-height: 30px; margin-right: 8px; }
+.studio-image .unity-base-text-field__input { font-size: 11px; }
+
+.studio-gallery {
+    max-height: 62px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: var(--border);
+    padding: 5px 8px;
+    background-color: var(--panel);
+}
+
+/* Devre dışı öğeler */
+.unity-disabled { opacity: 0.35; }
+
+/* Görsel akışı */
+.card-head-row { flex-direction: row; align-items: center; margin-bottom: 6px; }
+.studio-mode { min-width: 150px; font-size: 11px; }
+.img-preview {
+    width: 54px;
+    height: 54px;
+    border-radius: 6px;
+    margin-left: 6px;
+    border-width: 1px;
+    border-color: rgba(255,255,255,0.12);
+}
+
+/* Sohbet hızlı aksiyonları */
+.quick-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.quick-actions .ghost-btn { margin-right: 6px; margin-bottom: 4px; font-size: 11px; }
+
+/* Eklenen görseller şeridi */
+.attach-strip {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px;
+    margin-bottom: 6px;
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 10px;
+    background-color: var(--panel-2);
+}
+.attach-thumbs { flex-direction: row; flex-wrap: wrap; }
+
+/* Her ek, köşesinde kendi ✕ düğmesi olan bir "chip" */
+.attach-chip {
+    position: relative;
+    margin: 6px 10px 2px 2px;
+}
+.attach-thumb {
+    width: 54px;
+    height: 54px;
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 8px;
+    transition: scale 0.12s ease, border-color 0.15s ease;
+}
+.attach-thumb:hover { scale: 1.06 1.06; border-color: var(--accent); }
+
+/* Köşedeki kaldır düğmesi — üzerine gelince büyür ve kırmızıya döner */
+.attach-x {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    padding: 0;
+    margin: 0;
+    border-radius: 9px;
+    border-width: 1px;
+    border-color: var(--border-strong);
+    background-color: var(--panel);
+    color: var(--muted);
+    font-size: 10px;
+    -unity-text-align: middle-center;
+    transition: background-color 0.15s ease, color 0.15s ease, scale 0.12s ease;
+}
+.attach-x:hover { background-color: #E5484D; color: #FFFFFF; border-color: #E5484D; scale: 1.25 1.25; }
+.attach-x:active { scale: 0.9 0.9; }
+
+/* Eklenen belge rozeti */
+.attach-doc {
+    padding: 8px 12px;
+    border-width: 1px;
+    border-color: var(--border-strong);
+    border-radius: 8px;
+    background-color: var(--panel);
+    color: var(--text);
+    font-size: 10px;
+    transition: border-color 0.15s ease, scale 0.12s ease;
+}
+.attach-doc:hover { border-color: var(--accent); scale: 1.03 1.03; }
+
+.stop-btn { padding: 9px 14px; }
+
+/* Mesaj başlığı: gönderen + kopyala */
+.msg-head { flex-direction: row; align-items: center; }
+.msg-copy {
+    background-color: transparent;
+    border-width: 0;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    opacity: 0.3;                       /* sadece mesajın üstündeyken belirginleşir */
+    transition: opacity 0.15s ease, background-color 0.15s ease, scale 0.12s ease;
+}
+.msg:hover .msg-copy { opacity: 1; }
+.msg-copy:hover { color: var(--text); background-color: var(--panel); scale: 1.15 1.15; }
+.msg-copy:active { scale: 0.9 0.9; }
+
+/* Malzeme sekmesi */
+.mat-tiling { margin-top: 6px; margin-bottom: 8px; }
+
+/* ═══════════ DÜNYA SEKMESİ — kompakt satır düzenleri ═══════════ */
+/* Toggle'lar tek satırda (dar pencerede alta sarar) */
+.toggle-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+/* İkincil butonlar yan yana, eşit genişlikte segment görünümü */
+.btn-row { flex-direction: row; flex-wrap: wrap; margin-top: 2px; }
+.btn-row .ghost-btn { flex-grow: 1; margin-right: 6px; margin-bottom: 4px; }
+
+/* Etiket + alan + buton tek satırda (Hızlı Dekor) */
+.field-row { flex-direction: row; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+.field-row .grow { flex-grow: 1; flex-basis: 0; margin-right: 8px; min-width: 160px; }
+
+/* Dünya gövdesi: pencere küçülünce ezilmek yerine kaydır */
+.world-scroll { flex-grow: 1; }
+.world-scroll .unity-scroll-view__content-container > * { flex-shrink: 0; }
+
+/* Bölüm ayracı */
+.divider {
+    height: 1px;
+    background-color: var(--border);
+    margin-top: 12px;
+    margin-bottom: 10px;
+}
+
+/* Malzeme sekmesi düzeni */
+.mat-target { margin-bottom: 4px; }
+.mat-note { margin-bottom: 10px; opacity: 0.75; white-space: normal; }
+.mat-label { margin-top: 4px; }
+.mat-prompt { min-height: 54px; max-height: 90px; margin-bottom: 8px; }
+.mat-generate { margin-top: 6px; margin-bottom: 6px; }
+
+/* ═══════════ AYARLAR SEKMESİ ═══════════ */
+/* .field-row'da flex-wrap:wrap var — butonlar alt satıra kayıyordu. Burada SARMA YOK. */
+.set-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+/* Anahtar alanı kalan tüm genişliği alsın (dar pencerede placeholder kesilmesin) */
+.set-grow {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 120px;
+    margin-right: 8px;
+}
+/* Kayıtlı anahtar satırı: "Groq · gsk_…34   [Sil]" */
+.set-saved {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+.set-saved-name { flex-grow: 1; flex-basis: 0; }
+
+/* ═══════════ TAŞMA / İÇ İÇE GEÇME DÜZELTMESİ ═══════════
+   Sorun: pencere kısaldığında header, sekme çubuğu ve panel birbirinin üstüne
+   biniyordu (sekmeler logoyla aynı hizaya geliyor, mesaj balonu sekmelerin
+   arkasında kalıyordu). Sebep: flex öğelerinin varsayılan flex-shrink:1 değeri
+   sabit yüksekliği olan çubukları da sıkıştırıyor.
+   Çözüm: çubuklar KÜÇÜLMEZ; küçülmesi gereken yer kaydırılabilir gövdedir. */
+.header  { flex-shrink: 0; }
+.tabbar  { flex-shrink: 0; }
+.composer { flex-shrink: 0; }
+.status  { flex-shrink: 0; }
+/* Panel kalan alanı alır ama İÇERİĞİ taşırmaz (min-height:0 flexbox şartı) */
+.panel { min-height: 0; overflow: hidden; }
+/* Kaydırılabilir gövdeler gerçekten küçülebilsin */
+.messages, .world-scroll, .code-list, .studio-gallery { min-height: 0; }

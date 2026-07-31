@@ -1,0 +1,20 @@
+{
+  "name": "NovaWorld.Runtime",
+  "rootNamespace": "NovaWorld",
+  "references": [
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.unity.inputsystem",
+      "expression": "",
+      "define": "HAS_INPUTSYSTEM"
+    }
+  ]
+}

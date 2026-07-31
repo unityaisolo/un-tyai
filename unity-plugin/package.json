@@ -1,0 +1,22 @@
+{
+  "name": "com.mystudio.unityai",
+  "displayName": "UnityAI",
+  "version": "0.2.1",
+  "unity": "2022.3",
+  "description": "Unity içinde çalışan AI copilot. Kod yazar, sahneyi yönetir, 3D model üretip sahneye yerleştirir. Kendi API anahtarını bağla veya bulut planını kullan.",
+  "keywords": [
+    "ai",
+    "copilot",
+    "unity",
+    "assistant",
+    "llm",
+    "3d"
+  ],
+  "author": {
+    "name": "MyStudio"
+  },
+  "dependencies": {
+    "com.unity.cloud.gltfast": "6.9.0",
+    "com.unity.inputsystem": "1.7.0"
+  }
+}

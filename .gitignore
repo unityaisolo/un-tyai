@@ -1,0 +1,69 @@
+# ═══════════ GİZLİ ANAHTARLAR — ASLA COMMIT EDİLMEZ ═══════════
+# GitHub'a push edilirse API anahtarları herkese açık olur.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.local
+
+# ═══════════ Bağımlılıklar / derleme çıktıları ═══════════
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# ═══════════ Asset hattı (büyük binary'ler — Firebase'e gider) ═══════════
+asset-pipeline/assets-raw/
+asset-pipeline/textures-raw/
+asset-pipeline/catalog.json
+asset-pipeline/*.bak
+asset-pipeline/.fuse_hidden*
+
+# ═══════════ Unity ═══════════
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+*.csproj
+*.sln
+*.unitypackage
+
+# ═══════════ İÇ BELGELER — public repoda olmamalı ═══════════
+# Rakip analizi, fiyatlandırma/white-label stratejisi, iç todo listeleri.
+docs/PIYASA-ARASTIRMASI.md
+docs/SIKAYET-ANALIZI.md
+docs/STRATEGY.md
+FEATURES.md
+YAPILACAKLAR.md
+BUILD-PLAN-WORLDGEN.md
+
+# ═══════════ TELİF: başkasının dosyaları ═══════════
+# Coplay'in açık UI dosyaları (yalnızca yerel inceleme içindi) — dağıtılamaz.
+reference/
+
+# ═══════════ Sistem / editör ═══════════
+.DS_Store
+Thumbs.db
+*.log
+.vs/
+.idea/
+.vscode/
+
+# Anahtar kasası — asla depoya girmez
+.nova/
+vault.json
+vault.key
+*.env.local
+credits.json
+
+# ── Asset VERİSİ depoya girmez (buluttan dağıtılır) ──────────────────────────
+# skies-raw: 57 HDR gökyüzü, ~340 MB
+# textures-raw.zip: upload-firebase.ps1'in ürettiği paket, ~384 MB
+# GitHub'ın tek dosya limiti 100 MB — bunlar push'u tamamen engeller.
+asset-pipeline/skies-raw/
+asset-pipeline/textures-raw.zip
+*.hdr
+
+# Operasyon dokümanı (bucket adı, gcloud komutları — beta kullanıcısını ilgilendirmez)
+docs/FIREBASE-KURULUM.md

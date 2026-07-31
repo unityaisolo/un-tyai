@@ -1,0 +1,23 @@
+{
+  "name": "UnityAI.Editor",
+  "rootNamespace": "UnityAI",
+  "references": [
+    "glTFast",
+    "NovaWorld.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.unity.cloud.gltfast",
+      "expression": "",
+      "define": "GLTFAST_INSTALLED"
+    }
+  ]
+}
