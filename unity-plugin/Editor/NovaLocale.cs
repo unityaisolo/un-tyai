@@ -214,6 +214,18 @@ namespace UnityAI
                                          "本地没有模型 —— 将按需从云端下载。",
                                          "本機沒有模型 —— 將按需從雲端下載。" } },
 
+            // İndirme bitişi: kullanıcı asenkron işlemin sonucunu görmeli, yoksa boşlukta kalır.
+            { "lib.dl.okTitle",   new[]{ "Kütüphane hazır", "Library ready", "素材库就绪", "素材庫就緒" } },
+            { "lib.dl.okBody",    new[]{ "Katalog indirildi. Artık işlemi yeniden çalıştırabilirsin.\n\nModeller kullanıldıkça buluttan indirilir.",
+                                         "Catalog downloaded. You can run the action again now.\n\nModels download from the cloud as they are used.",
+                                         "目录已下载。现在可以重新执行该操作。\n\n模型将在使用时从云端下载。",
+                                         "目錄已下載。現在可以重新執行該操作。\n\n模型將在使用時從雲端下載。" } },
+            { "lib.dl.failTitle", new[]{ "Kütüphane indirilemedi", "Library download failed", "素材库下载失败", "素材庫下載失敗" } },
+            { "lib.dl.failBody",  new[]{ "İndirme başarısız oldu.\n\nSebep: {0}\n\nEn sık nedeni: Nova sunucusu çalışmıyor. Terminalde 'cd backend' ve 'npm run dev' ile başlatıp tekrar dene.\n\nKütüphane zaten diskindeyse 'Klasör seç' ile gösterebilirsin.",
+                                         "The download failed.\n\nReason: {0}\n\nMost common cause: the Nova server is not running. Start it with 'cd backend' and 'npm run dev', then try again.\n\nIf the library is already on disk, use 'Pick folder'.",
+                                         "下载失败。\n\n原因：{0}\n\n最常见的原因：Nova 服务器未运行。请执行 'cd backend' 和 'npm run dev' 后重试。\n\n如果素材库已在磁盘上，请使用“选择文件夹”。",
+                                         "下載失敗。\n\n原因：{0}\n\n最常見的原因：Nova 伺服器未執行。請執行 'cd backend' 和 'npm run dev' 後重試。\n\n如果素材庫已在磁碟上，請使用「選擇資料夾」。" } },
+
             // ---- Bulut indirme ----
             { "dl.noManifest",    new[]{ "Bulut kütüphanesi yapılandırılmamış (sunucu manifesti yok).",
                                          "Cloud library not configured (no server manifest).",

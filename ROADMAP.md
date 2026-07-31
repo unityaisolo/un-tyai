@@ -175,6 +175,31 @@
 - [ ] M1e Unity tarafı: giriş ekranı (Firebase REST ile e-posta/şifre + Google), kredi göstergesi, 402/401 yanıtlarında yönlendirme
 - [ ] M2 Ödeme — MoR (Polar.sh / Paddle; Stripe TR'de yok)
 - [ ] M3 Nova Cloud deploy + `CloudUrl` sabiti + bulut özelliklerinin o adrese yönlendirilmesi
+
+  **KARAR (2026-07-31): HİBRİT mimari.** Backend **Google Cloud Run**'a çıkar (Firebase
+  Hosting yapamaz — o statik dosya sunar; bizimki sürekli çalışan Node + SSE akışı).
+  Aynı Firebase/GCP projesi, boştayken sıfıra iner, alan adı zorunlu değil.
+
+  Anahtarlar nerede durur:
+  - **Bizim anahtarlarımız** → yalnızca Cloud Run ortam değişkenlerinde. Kullanıcı hiçbir
+    kurulum yapmaz, terminal görmez. 3D / Malzeme / Dünya buradan çalışır (üyelik + kredi).
+  - **Kullanıcının kendi anahtarı → YEREL KALIR.** Buluta ASLA gönderilmez. Kendi
+    anahtarını bağlamak isteyen yerel sunucuyu kurar (`npm run dev`).
+
+  Neden: bulutta BYO anahtar saklarsak binlerce kullanıcının API anahtarını biz tutarız —
+  sızıntı = onların faturası, üstüne KVKK/GDPR yükümlülüğü. Ayrıca KURULUM.md'deki
+  "anahtarların bilgisayarından çıkmaz" vaadi yalan olurdu. Bedeli: iki kurulum yolu ve
+  iki ayrı dokümantasyon dalı — kabul edildi.
+
+  Yapılacaklar: Dockerfile · Cloud Run servisi (min-instances=0) · `NOVA_CLOUD=true` +
+  havuz anahtarları yalnızca orada · SSE'nin Cloud Run üzerinden aktığının doğrulanması ·
+  plugin'de `CloudUrl` sabiti · KURULUM.md'nin "bulut (kurulum yok)" ve "yerel (kendi
+  anahtarım)" olarak ikiye ayrılması.
+
+- [ ] **M3b Yerel kurulumda `npm run dev` sürtünmesi.** Kendi anahtarını kullanacak
+  kullanıcıya "terminal aç, komut yaz, pencereyi kapatma" demek beta için tamam, genel
+  yayın için değil. Seçenek: eklenti Unity açılınca backend'i arka planda kendisi
+  başlatsın (Node yine gerekir ama terminal görünmez). M3'ten sonra değerlendirilecek.
 - [ ] M4 Sohbette "kendi anahtarım / Nova kredisi" seçimi + kredi göstergesi (M1 olmadan sadece görsel kalır)
 - [ ] M5 Bulut özelliklerinde üyelik yoksa net yönlendirme ("Dünya üreteci Nova üyeliği gerektirir")
 

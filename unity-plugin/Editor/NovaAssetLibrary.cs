@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -139,11 +140,59 @@ namespace UnityAI
             if (choice == 0)
             {
                 // İndirme asenkron: bitince katalog kalıcı kaydedilir, kullanıcı işlemi yineler.
-                _ = NovaAssetDownloader.DownloadCatalog(s => Debug.Log("[Nova] " + s));
+                _ = DownloadThenReport();
                 Debug.Log("[Nova] " + NovaLocale.T("lib.downloading"));
                 return null;
             }
 
+            return PickFolder();
+        }
+
+        /// <summary>
+        /// Buluttan indirmeyi başlatır ve SONUCU KULLANICIYA BİLDİRİR.
+        ///
+        /// NEDEN AYRI METOT: indirme "ateşle-unut" çağrılıyordu. Başarısız olduğunda
+        /// kullanıcıya yalnızca konsola bir satır düşüyordu; ne dosya vardı ne de yeni
+        /// bir seçim şansı — ve manifest hatası seans boyunca önbelleğe alındığı için
+        /// "tekrar dene" de sessizce hiçbir şey yapmıyordu. Beta testinde tam olarak
+        /// bu çıkmaz yaşandı. Artık: başarı da başarısızlık da diyalogla bildirilir,
+        /// hata durumunda önbellek temizlenir ve elle klasör seçme yolu açık kalır.
+        /// </summary>
+        private static async Task DownloadThenReport()
+        {
+            string reason = null;
+            string path = null;
+            try
+            {
+                path = await NovaAssetDownloader.DownloadCatalog(s =>
+                {
+                    reason = s;                       // son mesaj = başarısızlık sebebi
+                    Debug.Log("[Nova] " + s);
+                });
+            }
+            catch (Exception e) { reason = e.Message; }
+
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            {
+                _missCached = false;                  // arama önbelleğini aç, yol artık var
+                EditorUtility.DisplayDialog(NovaLocale.T("lib.dl.okTitle"), NovaLocale.T("lib.dl.okBody"), "OK");
+                return;
+            }
+
+            // Başarısız: aynı seansta yeniden denenebilsin diye manifest önbelleğini temizle.
+            NovaAssetDownloader.ResetCache();
+            _missCached = false;
+
+            bool pick = EditorUtility.DisplayDialog(
+                NovaLocale.T("lib.dl.failTitle"),
+                NovaLocale.T("lib.dl.failBody", string.IsNullOrEmpty(reason) ? "?" : reason),
+                NovaLocale.T("lib.missing.pick"), NovaLocale.T("dialog.cancel"));
+            if (pick) PickFolder();
+        }
+
+        /// <summary>Diskteki kütüphane klasörünü seçtirir; catalog.json'u bulursa kaydeder.</summary>
+        private static string PickFolder()
+        {
             string dir = EditorUtility.OpenFolderPanel(NovaLocale.T("lib.pick.title"), "", "");
             if (string.IsNullOrEmpty(dir)) return null;
 
