@@ -16,8 +16,23 @@ import { getKey } from "./keyvault.js";
 
 const CLOUD_MODE = String(process.env.NOVA_CLOUD ?? "").toLowerCase() === "true";
 
-/** Kullanıcının bu istek için kendi anahtarı var mı? */
-function hasOwnKey(userId: string): boolean {
+/**
+ * Kullanıcının bu istek için kendi anahtarı var mı?
+ *
+ * ⚠ BU YALNIZCA BİR ÖN TAHMİNDİR, muhasebe kararı DEĞİLDİR.
+ *
+ * AÇIK (denetimde bulundu): eskiden `gate()` bu tahmine bakıp "kendi anahtarı var →
+ * bedava" diyordu. Ama kullanıcının kayıtlı anahtarı isteğin GERÇEKTEN kullandığı
+ * sağlayıcıya ait olmayabilir. Örnek: kullanıcı bir `custom` anahtar kaydeder, sonra
+ * bizim havuzumuza düşen bir modele istek atar → kapı "bedava" der, istek BİZİM
+ * anahtarımızla çalışır. Bakiye `Math.max(0, …)` ile sıfırda durduğu için borç da
+ * birikmez: sınırsız bedava kullanım.
+ *
+ * Doğrusu: ücretlendirme kararı, isteği çalıştıran katmanın döndürdüğü `pooled`
+ * bilgisine dayanır (bkz. resolveTarget / charge). Kapı yalnızca "hiç anahtarı yok ve
+ * kredisi de yok" durumunu erkenden eler.
+ */
+function hasAnyOwnKey(userId: string): boolean {
   for (const p of ["groq", "openrouter", "openai", "anthropic", "gemini", "deepseek", "custom"])
     if (getKey(userId, p)) return true;
   return false;
@@ -29,7 +44,7 @@ export interface GateResult { ok: boolean; usingOwnKey: boolean }
  * Erişimi denetler. Reddedilirse yanıtı KENDİSİ yazar (402) ve ok:false döner.
  */
 export function gate(req: Request, res: Response, feature: Feature): GateResult {
-  const usingOwnKey = hasOwnKey(req.userId);
+  const usingOwnKey = hasAnyOwnKey(req.userId);
 
   // Yerel mod: kredi yok, kapı açık.
   if (!CLOUD_MODE) return { ok: true, usingOwnKey };
@@ -63,7 +78,13 @@ export function gate(req: Request, res: Response, feature: Feature): GateResult 
  */
 export function charge(userId: string, usd: number, pooled: boolean): void {
   if (!CLOUD_MODE || !pooled) return;
-  try { chargeUsd(userId, usd); } catch { /* ücretlendirme isteği bozmasın */ }
+  try {
+    chargeUsd(userId, usd);
+  } catch (e) {
+    // SESSİZ YUTMA YOK: ücretlendirme başarısızsa hizmet bedavaya gitmiş demektir.
+    // İstek bozulmamalı ama bu MUTLAKA görünür olmalı, yoksa kaybı hiç fark etmeyiz.
+    console.error(`[BILLING] ücretlendirilemedi user=${userId} usd=${usd}:`, e);
+  }
 }
 
 export function cloudMode(): boolean { return CLOUD_MODE; }

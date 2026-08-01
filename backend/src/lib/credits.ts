@@ -36,6 +36,9 @@ interface Account {
   until?: string;
   /** Toplam harcanan kredi (raporlama) */
   spent: number;
+  /** Bakiye yetmediği için karşılanamayan kredi (bkz. chargeUsd). Bir sonraki
+   *  yüklemede mahsup edilmeli; şu an yalnızca kaydediliyor ve görünür kılınıyor. */
+  debt?: number;
 }
 
 interface Ledger { version: number; accounts: Record<string, Account> }
@@ -61,6 +64,35 @@ function load(): Ledger {
 }
 
 let ledger: Ledger = load();
+
+/**
+ * ⚠ TEK SÜREÇ VARSAYIMI — CANLIYA ÇIKMADAN ÖNCE OKU.
+ *
+ * Bu defter süreç belleğinde tutulur ve her değişiklikte dosyanın TAMAMI yeniden
+ * yazılır. Tek süreçte güvenlidir: JavaScript olay döngüsü tek iş parçacıklı olduğu
+ * ve oku-değiştir-yaz arasında `await` bulunmadığı için düşüm atomiktir.
+ *
+ * ÇOK SÜREÇLİ/ÇOK ÖRNEKLİ ÇALIŞMADA BOZULUR — ve Cloud Run varsayılan olarak
+ * otomatik ölçeklenir:
+ *   • Her örneğin kendi bellek kopyası olur; biri diğerinin düşümünü görmez.
+ *   • persist() dosyanın tamamını yazar → son yazan kazanır, aradaki düşümler yok olur.
+ *   • Sonuç: kullanıcı iki örneğe paralel istek atarak ücretlendirmeyi atlatabilir.
+ *   • Cloud Run'ın diski kalıcı da değildir; örnek kapanınca defter tamamen kaybolur.
+ *
+ * Bu yüzden NOVA_CLOUD=true + dosya defteri kombinasyonu üretim için GEÇERSİZDİR.
+ * Gereken: transaction destekli gerçek veritabanı (Firestore transaction / Postgres
+ * `UPDATE … SET credits = credits - $1 WHERE credits >= $1` gibi atomik düşüm).
+ */
+if (String(process.env.NOVA_CLOUD ?? "").toLowerCase() === "true" &&
+    String(process.env.NOVA_ALLOW_FILE_LEDGER ?? "").toLowerCase() !== "true") {
+  console.error(
+    "\n[KREDİ] ÖLÜMCÜL YAPILANDIRMA: NOVA_CLOUD=true ama kredi defteri dosyada tutuluyor.\n" +
+    "  Çok örnekli çalışmada düşümler kaybolur ve ücretlendirme atlatılabilir.\n" +
+    "  Üretimde transaction destekli bir veritabanı kullan.\n" +
+    "  Yalnızca TEK örnekli denemede: NOVA_ALLOW_FILE_LEDGER=true ile bu kontrolü kapatabilirsin.\n",
+  );
+  throw new Error("Bulut modunda dosya tabanlı kredi defteri kullanılamaz.");
+}
 
 function persist(): void {
   try {
@@ -147,8 +179,17 @@ export function chargeUsd(userId: string, usd: number): Account {
   const a = ensure(userId);
   const c = Math.max(0, Math.round((Number.isFinite(usd) ? usd : 0) * CREDITS_PER_USD));
   if (c === 0) return { ...a };
+
+  // BORÇ GÖRÜNÜR OLSUN: bakiye sıfırda durur (kullanıcıya eksi bakiye göstermeyiz)
+  // ama karşılanamayan kısım ayrıca kaydedilir. Eskiden fazlası sessizce siliniyordu;
+  // tek bir uzun akış bakiyeden ÇOK fazlasını harcayıp iz bırakmıyordu.
+  const short = Math.max(0, c - a.credits);
   a.credits = Math.max(0, a.credits - c);
   a.spent += c;
+  if (short > 0) {
+    a.debt = (a.debt ?? 0) + short;
+    console.warn(`[BILLING] karşılanamayan kullanım user=${userId} eksik=${short} kredi (toplam borç=${a.debt})`);
+  }
   persist();
   return { ...a };
 }

@@ -26,18 +26,38 @@ const PRICING: Record<string, { input: number; output: number }> = {
 // Bilinmeyen modelleri bir kez logla — fiyat tablosu sessizce eskimesin.
 const warned = new Set<string>();
 
+/**
+ * Tabloda olmayan model için TEMKİNLİ varsayılan (USD / 1M token).
+ *
+ * NEDEN 0 DEĞİL: eskiden bilinmeyen model $0 sayılıyordu. Bu, tablo eskidiğinde
+ * sessizce BİZİM ZARARIMIZA çalışıyordu. Dahası, otomatik model seçimi eklendikten
+ * sonra artık modeli kullanıcının sağlayıcısı belirliyor — yani "tabloda olmayan
+ * model" istisna değil, NORMAL durum. $0 varsayımı sistematik gelir kaybı demek.
+ *
+ * Değer büyük modellerin üst bandına yakın seçildi: hata yaparsak kendi lehimize
+ * değil, temkinli tarafa yapalım. Gerçek fiyat öğrenilince PRICING'e eklenir.
+ * NOVA_FALLBACK_PRICE_IN / _OUT ile ayarlanabilir.
+ */
+const FALLBACK_PRICE = {
+  input: Number(process.env.NOVA_FALLBACK_PRICE_IN ?? "3.0"),
+  output: Number(process.env.NOVA_FALLBACK_PRICE_OUT ?? "15.0"),
+};
+
 /** Model için 1M-token fiyatı. Önce tam eşleşme, sonra desen kuralları. */
 function priceFor(model: string): { input: number; output: number } {
   const exact = PRICING[model];
   if (exact) return exact;
-  // Yerel ve ücretsiz modeller gerçekten $0
+  // Yerel ve ücretsiz modeller GERÇEKTEN $0 — bunlar bizim kaynağımızı harcamıyor.
   if (model.startsWith("ollama/") || model.startsWith("ollama:")) return { input: 0, output: 0 };
   if (model.endsWith(":free")) return { input: 0, output: 0 };
   if (!warned.has(model)) {
     warned.add(model);
-    console.warn(`[metering] '${model}' PRICING tablosunda yok — maliyet $0 sayılıyor. Tabloyu güncelle.`);
+    console.warn(
+      `[metering] '${model}' PRICING tablosunda yok — temkinli varsayılan ` +
+      `($${FALLBACK_PRICE.input}/$${FALLBACK_PRICE.output} per 1M) uygulanıyor. Tabloya ekle.`,
+    );
   }
-  return { input: 0, output: 0 };
+  return FALLBACK_PRICE;
 }
 
 export interface UsageRecord {
