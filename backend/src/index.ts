@@ -12,6 +12,7 @@ import { accountRouter } from "./routes/account.js";
 import { getSettings, vaultLocation } from "./lib/keyvault.js";
 import { bindSettingsReader } from "./aliases.js";
 import { readTx, summarize, usageLogLocation } from "./lib/usagelog.js";
+import { storeInfo } from "./lib/creditstore.js";
 import { TOOLS } from "./tools.js";
 
 // aliases.ts kasayı doğrudan import etmez (döngüsel import olmasın) — okuyucuyu burada bağlıyoruz.
@@ -46,6 +47,11 @@ app.listen(PORT, () => {
   console.log(`UnityAI backend http://localhost:${PORT} üzerinde çalışıyor`);
   console.log(`Araçlar: ${TOOLS.map((t) => t.name).join(", ")}`);
   console.log(`Anahtar kasası: ${vaultLocation()}`);
+  // Kredi/döküm katmanı yerel modda hiç ÇAĞRILMIYOR (gate erken dönüyor), bu yüzden
+  // sürücüyü açılışta yazıyoruz — yapılandırmanın ne olduğu her zaman görünsün.
+  const st = storeInfo();
+  console.log(`[kredi] defter sürücüsü: ${st.kind} · ${st.location}`);
+  console.log(`[kredi] işlem dökümü: ${usageLogLocation()}`);
 
   // ANAHTAR MODU
   // Varsayılan: BYO zorunlu. Kullanıcı kendi anahtarını Ayarlar'dan girer, anahtar
