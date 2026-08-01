@@ -45,7 +45,7 @@ characterRouter.post("/character/pipeline", async (req: Request, res: Response) 
   if (!prompt && !modelUrl && !imageUrl)
     return res.status(400).json({ error: "prompt, imageUrl veya modelUrl gerekli" });
 
-  if (!gate(req, res, "studio").ok) return;  const key = resolveKey(req.userId, "fal");
+  if (!(await gate(req, res, "studio")).ok) return;  const key = resolveKey(req.userId, "fal");
   if (!key)
     return res.status(400).json({ error: noKeyMessage("fal") });
 

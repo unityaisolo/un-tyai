@@ -88,7 +88,7 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
   const tools = toolNames ? TOOLS.filter((t) => toolNames.includes(t.name)) : TOOLS;
 
   // ÖNEMLİ: kapı SSE başlıklarından ÖNCE. writeHead sonrası status/json yazılamaz.
-  if (!gate(req, res, "chat").ok) return;
+  if (!(await gate(req, res, "chat")).ok) return;
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -107,7 +107,7 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
     // Bir beyin turu çalıştırır. Council açıkken tool_call'lar tamponlanır (satır içi gönderilmez).
     // Bu isteğin harcayabileceği üst sınır. Yerel modda veya kullanıcının kendi
     // anahtarında sonsuz döner, yani akış hiç kesilmez.
-    const maxUsd = budgetUsd(req.userId, pooled);
+    const maxUsd = await budgetUsd(req.userId, pooled);
     let budgetExceeded = false;
 
     const runBrain = async (msgs: ChatMessage[]) => {
@@ -181,7 +181,7 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
 
     send({ type: "done" });
     const usage = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled });
-    charge(req.userId, usage.totalUsd, pooled);
+    await charge(req.userId, usage.totalUsd, pooled);
     send({ type: "billing", ...usage });
   } catch (err) {
     send({ type: "error", message: err instanceof Error ? err.message : String(err) });

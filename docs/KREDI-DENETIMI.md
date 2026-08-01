@@ -15,10 +15,12 @@
 | 2 | Bilinmeyen model $0 sayılıyordu | Sistematik gelir kaybı | **Düzeltildi** |
 | 3 | Ücretlendirme hatası sessizce yutuluyordu | Kayıp fark edilmiyor | **Düzeltildi** |
 | 4 | Karşılanamayan kullanım iz bırakmadan siliniyordu | Ölçülemeyen zarar | **Düzeltildi** |
-| 5 | Dosya tabanlı defter çok örnekli çalışmada bozuluyor | Ücretlendirme atlatılabilir | **Engellendi** (bulutta başlatmıyor) |
+| 5 | Dosya tabanlı defter çok örnekli çalışmada bozuluyor | Ücretlendirme atlatılabilir | **Çözüldü** (Firestore transaction) |
 | 6 | İşlem dökümü kalıcı değil, kullanıcı göremiyor | Güven / "dolandırıcı" algısı | **Açık** |
 | 7 | Deneme kredisi hesap açarak sömürülebilir | Bedava kaynak | **Açık** |
-| 8 | Üyelikte üst sınır yok | Öngörülemeyen maliyet | **Açık** |
+| 8 | Üyelikte üst sınır yok | Öngörülemeyen maliyet | **Çözüldü** (aylık tavan) |
+| 9 | Akış ortasında kesme yok | Bakiyenin katı harcanabiliyor | **Çözüldü** |
+| 10 | Borç hiç tahsil edilmiyordu | Kalıcı zarar | **Çözüldü** (yüklemede mahsup) |
 
 ---
 
@@ -89,21 +91,6 @@ verir → hesap üreterek bedava kaynak alınabilir.
 En az: e-posta doğrulaması zorunlu. Daha iyisi: bonusu ödeme yöntemi eklenince ver, ya da
 tamamen kapat (`SIGNUP_BONUS_CREDITS=0`, şu anki varsayılan).
 
-### 8 · Üyelikte üst sınır yok
-
-`checkAccess`: `plan === "member"` ise kredi 0 olsa bile geçiyor; `chargeUsd` de sıfırda
-duruyor. Yani **üye = sınırsız kullanım.** Tek bir ağır kullanıcı üyelik ücretinin kat kat
-üstünde maliyet çıkarabilir.
-
-Gereken: üyeliğe aylık kredi tavanı, tavan aşılınca ek kredi satın alma.
-
-### 9 · Akış ortasında kesme yok
-
-Kapı yalnızca istek **başında** bakiyeye bakıyor. 1 kredisi olan kullanıcı çok uzun bir akış
-başlatıp bakiyesinin kat kat üstünde harcayabilir (bkz. madde 4 — artık en azından iz bırakıyor).
-
-Gereken: akış sırasında token sayacı, tavan aşılınca akışı kes.
-
 ### 10 · İade politikası
 
 Yazılı bir politika yok. Ödeme sağlayıcıları (Polar/Paddle) bunu şart koşuyor. M2 öncesi
@@ -115,8 +102,34 @@ belirlenmeli.
 
 Dört para kaybı düzeltildi ve yanlış yapılandırmayla buluta çıkma yolu kapatıldı.
 
-**M2 (ödeme) ve M3 (bulut) için kalan zorunlu iş:** transaction destekli veritabanı (madde 5),
-kalıcı işlem dökümü (madde 6), üyelik tavanı (madde 8), akış ortasında kesme (madde 9),
-iade politikası (madde 10).
+**M2 (ödeme) ve M3 (bulut) için kalan zorunlu iş:** kalıcı işlem dökümü (madde 6),
+deneme kredisi suistimali (madde 7), iade politikası.
 
 Bunlar bitmeden gerçek para akmamalı.
+
+---
+
+## Ek: 2026-08-01 ikinci tur
+
+**Üyelik tavanı** eklendi (`MEMBER_MONTHLY_CREDITS`, varsayılan 20000 = $20/ay, 30 günlük
+kayan pencere). Üyelik ilk başlarken dönem sıfırlanıyor — testte çıktı ki kullanıcının üye
+olmadan önce harcadıkları da tavana sayılıyor, ödeme yapan kişi tavanı dolmuş başlıyordu.
+Uzatmada sıfırlanmıyor, yoksa her uzatma tavanı yenileyerek suistimal edilirdi.
+
+**Akış ortasında kesme** eklendi: `budgetUsd()` isteğin üst sınırını verir, `chat.ts` her
+usage olayında anlık maliyeti karşılaştırır, aşılırsa akışı keser ve denetçi turunu
+çalıştırmaz (aksi halde model ikinci kez çalışıp harcamaya devam ederdi).
+
+**Borç mahsubu** eklendi: karşılanamayan kullanım bir sonraki kredi yüklemesinden düşülüyor.
+Öncesinde `debt` yalnızca kaydediliyor, hiç tahsil edilmiyordu.
+
+**Depolama sürücüye ayrıldı** (`creditstore.ts`): dosya ve Firestore. Firestore sürücüsü
+`runTransaction` kullanır, yani oku-değiştir-yaz atomiktir ve çok örnekli çalışmada düşüm
+kaybolmaz. Kredi API'si asenkron oldu — Firestore ağ üzerinden çalıştığı için senkron imza
+sürdürülemezdi; sessizce eski değeri okumak ücretlendirmeyi kaybetmenin en kolay yoluydu.
+`@google-cloud/firestore` opsiyonel bağımlılık ve dinamik yükleniyor: yerel kullanıcı kurmak
+zorunda değil. Cloud Run'da kimlik doğrulama ADC ile otomatik, anahtar dosyası gerekmez.
+
+**Doğrulama:** dosya sürücüsüyle beş senaryo + 20 paralel düşüm testi geçti (kayıp yok).
+**Firestore sürücüsü gerçek bir Firestore'a karşı HENÜZ ÇALIŞTIRILMADI** — yalnızca derleniyor.
+Bu, M3 deploy'unun ilk doğrulama adımı olmalı.

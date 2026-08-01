@@ -23,7 +23,7 @@ generateRouter.post("/generate/3d", async (req: Request, res: Response) => {
   if (!parsed.data.prompt && !parsed.data.imageUrl)
     return res.status(400).json({ error: "prompt veya imageUrl gerekli" });
 
-  if (!gate(req, res, "studio").ok) return;  const key = resolveKey(req.userId, "fal");
+  if (!(await gate(req, res, "studio")).ok) return;  const key = resolveKey(req.userId, "fal");
   if (!key)
     return res.status(400).json({ error: noKeyMessage("fal") });
 
@@ -46,7 +46,7 @@ const BodyImage = z.object({ prompt: z.string().min(1), model: z.string().option
 generateRouter.post("/generate/image", async (req: Request, res: Response) => {
   const parsed = BodyImage.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-  if (!gate(req, res, "studio").ok) return;  const key = resolveKey(req.userId, "fal");
+  if (!(await gate(req, res, "studio")).ok) return;  const key = resolveKey(req.userId, "fal");
   if (!key)
     return res.status(400).json({ error: noKeyMessage("fal") });
   try {

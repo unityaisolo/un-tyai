@@ -43,7 +43,7 @@ export interface GateResult { ok: boolean; usingOwnKey: boolean }
 /**
  * Erişimi denetler. Reddedilirse yanıtı KENDİSİ yazar (402) ve ok:false döner.
  */
-export function gate(req: Request, res: Response, feature: Feature): GateResult {
+export async function gate(req: Request, res: Response, feature: Feature): Promise<GateResult> {
   const usingOwnKey = hasAnyOwnKey(req.userId);
 
   // Yerel mod: kredi yok, kapı açık.
@@ -58,7 +58,7 @@ export function gate(req: Request, res: Response, feature: Feature): GateResult 
     return { ok: false, usingOwnKey };
   }
 
-  const g = checkAccess(req.userId, feature, usingOwnKey);
+  const g = await checkAccess(req.userId, feature, usingOwnKey);
   if (!g.allowed) {
     res.status(402).json({
       error: g.reason,
@@ -76,10 +76,10 @@ export function gate(req: Request, res: Response, feature: Feature): GateResult 
  * Kullanım sonrası ücretlendirir. Kullanıcı kendi anahtarını kullandıysa
  * (pooled=false) hiçbir şey düşülmez — bizim kaynağımız harcanmadı.
  */
-export function charge(userId: string, usd: number, pooled: boolean): void {
+export async function charge(userId: string, usd: number, pooled: boolean): Promise<void> {
   if (!CLOUD_MODE || !pooled) return;
   try {
-    chargeUsd(userId, usd);
+    await chargeUsd(userId, usd);
   } catch (e) {
     // SESSİZ YUTMA YOK: ücretlendirme başarısızsa hizmet bedavaya gitmiş demektir.
     // İstek bozulmamalı ama bu MUTLAKA görünür olmalı, yoksa kaybı hiç fark etmeyiz.
@@ -91,9 +91,9 @@ export function charge(userId: string, usd: number, pooled: boolean): void {
  * Bu isteğin harcayabileceği üst sınır (USD). Akış ortasında kesme için.
  * Ücretlendirme geçerli değilse (yerel mod veya kullanıcının kendi anahtarı) sonsuz.
  */
-export function budgetUsd(userId: string, pooled: boolean): number {
+export async function budgetUsd(userId: string, pooled: boolean): Promise<number> {
   if (!CLOUD_MODE || !pooled) return Number.POSITIVE_INFINITY;
-  return requestBudgetUsd(userId);
+  return await requestBudgetUsd(userId);
 }
 
 export function cloudMode(): boolean { return CLOUD_MODE; }

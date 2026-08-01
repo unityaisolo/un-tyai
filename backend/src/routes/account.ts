@@ -17,8 +17,8 @@ const CLOUD_MODE = String(process.env.NOVA_CLOUD ?? "").toLowerCase() === "true"
 /** Kredi eklemek/üyelik vermek için yönetici sırrı (ödeme webhook'u da bunu kullanır). */
 const ADMIN_SECRET = process.env.ADMIN_SECRET ?? "";
 
-accountRouter.get("/account", (req: Request, res: Response) => {
-  const a = getAccount(req.userId);
+accountRouter.get("/account", async (req: Request, res: Response) => {
+  const a = await getAccount(req.userId);
   res.json({
     cloudMode: CLOUD_MODE,
     authed: req.authed === true,
@@ -42,7 +42,7 @@ const GrantBody = z.object({
   membershipDays: z.number().int().positive().optional(),
 });
 
-accountRouter.post("/account/grant", (req: Request, res: Response) => {
+accountRouter.post("/account/grant", async (req: Request, res: Response) => {
   if (!ADMIN_SECRET) { res.status(503).json({ error: "ADMIN_SECRET tanımlı değil — kredi verme kapalı." }); return; }
   const given = (req.header("x-admin-secret") ?? "").trim();
   // Sabit süreli karşılaştırma: sır uzunluğu/içeriği zamanlamadan sızmasın.
@@ -56,14 +56,14 @@ accountRouter.post("/account/grant", (req: Request, res: Response) => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
   const { userId, credits, membershipDays } = parsed.data;
 
-  let a = getAccount(userId);
-  if (credits) a = addCredits(userId, credits);
-  if (membershipDays) a = setMembership(userId, membershipDays);
+  let a = await getAccount(userId);
+  if (credits) a = await addCredits(userId, credits);
+  if (membershipDays) a = await setMembership(userId, membershipDays);
 
   res.json({ ok: true, userId, plan: a.plan, credits: a.credits, until: a.until ?? null });
 });
 
 /** Teşhis: kredi defterinin yeri (yalnız bulut yöneticisi için anlamlı). */
-accountRouter.get("/account/where", (_req: Request, res: Response) => {
+accountRouter.get("/account/where", async (_req: Request, res: Response) => {
   res.json({ file: CLOUD_MODE ? creditsFile() : null, cloudMode: CLOUD_MODE });
 });
