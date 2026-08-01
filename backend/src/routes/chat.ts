@@ -181,7 +181,7 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
 
     send({ type: "done" });
     const usage = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled });
-    await charge(req.userId, usage.totalUsd, pooled);
+    await charge(req.userId, usage.totalUsd, pooled, { feature: "chat", model, inputTokens: inTok, outputTokens: outTok });
     send({ type: "billing", ...usage });
   } catch (err) {
     send({ type: "error", message: err instanceof Error ? err.message : String(err) });

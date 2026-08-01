@@ -11,7 +11,7 @@ import { settingsRouter } from "./routes/settings.js";
 import { accountRouter } from "./routes/account.js";
 import { getSettings, vaultLocation } from "./lib/keyvault.js";
 import { bindSettingsReader } from "./aliases.js";
-import { getLedger } from "./billing/metering.js";
+import { readTx, summarize, usageLogLocation } from "./lib/usagelog.js";
 import { TOOLS } from "./tools.js";
 
 // aliases.ts kasayı doğrudan import etmez (döngüsel import olmasın) — okuyucuyu burada bağlıyoruz.
@@ -25,7 +25,11 @@ app.use(auth);
 app.get("/health", (_req, res) => res.json({ ok: true, tools: TOOLS.map((t) => t.name) }));
 
 // Kullanım / fatura defteri
-app.get("/v1/usage", (req, res) => res.json({ records: getLedger(req.userId) }));
+// Kalıcı işlem dökümü (eskiden bellekteydi; sunucu yeniden başlayınca siliniyordu).
+app.get("/v1/usage", async (req, res) => {
+  const txs = await readTx(req.userId, 200);
+  res.json({ transactions: txs, summary: summarize(txs) });
+});
 
 app.use("/v1", chatRouter);
 app.use("/v1", generateRouter);

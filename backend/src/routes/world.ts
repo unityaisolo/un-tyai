@@ -183,7 +183,7 @@ worldRouter.post("/world/curate", async (req: Request, res: Response) => {
       { role: "user", content: "ADAYLAR:" + catalogTxt },
     ];
     const { text, inTok, outTok } = await chatTextWithRetry(provider, model, messages, apiKey, baseUrl);
-    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled); } catch { /* opsiyonel */ }
+    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled, { feature: "world" }); } catch { /* opsiyonel */ }
     const m = stripReasoning(text).match(/\{[\s\S]*\}/);
     if (!m) { res.json({ picks: fallback(), notes: ["Beyin yanıtı çözümlenemedi — varsayılan seçim."], source: "fallback" }); return; }
     const parsedJson: any = JSON.parse(m[0]);
@@ -315,7 +315,7 @@ worldRouter.post("/world/decor", async (req: Request, res: Response) => {
     ];
 
     const { text, inTok, outTok } = await chatTextWithRetry(provider, model, messages, apiKey, baseUrl);
-    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled); } catch { /* opsiyonel */ }
+    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled, { feature: "world" }); } catch { /* opsiyonel */ }
 
     const raw = extractJson(text);
     if (!raw) { res.json({ plan: heuristicDecor(prompt, roles), source: "heuristic-fallback" }); return; }
@@ -433,7 +433,7 @@ worldRouter.post("/world/terrain", async (req: Request, res: Response) => {
     ];
 
     const { text, inTok, outTok } = await chatTextWithRetry(provider, model, messages, apiKey, baseUrl);
-    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled); } catch { /* opsiyonel */ }
+    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled, { feature: "world" }); } catch { /* opsiyonel */ }
 
     const raw = extractJson(text) as Partial<TerrainPlanJson> | null;
     if (!raw) { res.json({ plan: heuristicTerrain(prompt, biomes, skies), source: "heuristic-fallback" }); return; }
@@ -476,7 +476,7 @@ worldRouter.post("/world/plan", async (req: Request, res: Response) => {
       else if (ev.type === "error") throw new Error(ev.message);
       else if (ev.type === "done") break;
     }
-    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled); } catch { /* metering opsiyonel */ }
+    try { const u = recordUsage({ userId: req.userId, model, inputTokens: inTok, outputTokens: outTok, pooled }); await charge(req.userId, u.totalUsd, pooled, { feature: "world" }); } catch { /* metering opsiyonel */ }
 
     const raw = extractJson(text);
     if (!raw) { res.json({ plan: heuristic(prompt, styles, themes), source: "heuristic-fallback" }); return; }

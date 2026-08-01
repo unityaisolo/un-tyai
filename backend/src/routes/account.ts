@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import crypto from "node:crypto";
 import { getAccount, addCredits, setMembership, CREDITS_PER_USD, creditsFile } from "../lib/credits.js";
+import { logTx, readTx, summarize } from "../lib/usagelog.js";
 
 export const accountRouter = Router();
 
@@ -57,10 +58,28 @@ accountRouter.post("/account/grant", async (req: Request, res: Response) => {
   const { userId, credits, membershipDays } = parsed.data;
 
   let a = await getAccount(userId);
-  if (credits) a = await addCredits(userId, credits);
-  if (membershipDays) a = await setMembership(userId, membershipDays);
+  if (credits) {
+    a = await addCredits(userId, credits);
+    // Yükleme de deftere girer: kullanıcı sadece harcamayı değil, gelen krediyi de
+    // görebilmeli. Tek taraflı bir döküm güven vermez.
+    await logTx({ userId, kind: "topup", usd: credits / CREDITS_PER_USD, credits, note: "yönetici/ödeme" });
+  }
+  if (membershipDays) {
+    a = await setMembership(userId, membershipDays);
+    await logTx({ userId, kind: "membership", usd: 0, credits: 0, note: `${membershipDays} gün üyelik` });
+  }
 
   res.json({ ok: true, userId, plan: a.plan, credits: a.credits, until: a.until ?? null });
+});
+
+/**
+ * İŞLEM DÖKÜMÜ — kullanıcı ne için ne kadar ödediğini buradan görür.
+ * Şeffaflık, "haksız kesinti yapıldı" iddiasına verilebilecek tek somut cevap.
+ */
+accountRouter.get("/account/usage", async (req: Request, res: Response) => {
+  const limit = Math.min(500, Math.max(1, Number(req.query.limit ?? 100)));
+  const txs = await readTx(req.userId, limit);
+  res.json({ transactions: txs, summary: summarize(txs), creditsPerUsd: CREDITS_PER_USD });
 });
 
 /** Teşhis: kredi defterinin yeri (yalnız bulut yöneticisi için anlamlı). */

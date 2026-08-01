@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { checkAccess, chargeUsd, isPaidFeature, requestBudgetUsd, type Feature } from "./credits.js";
 import { getKey } from "./keyvault.js";
+import { logTx } from "./usagelog.js";
 
 /**
  * ÖZELLİK KAPISI — bulut kaynaklarını kullanan uçların ÖNÜNDE çağrılır.
@@ -76,10 +77,24 @@ export async function gate(req: Request, res: Response, feature: Feature): Promi
  * Kullanım sonrası ücretlendirir. Kullanıcı kendi anahtarını kullandıysa
  * (pooled=false) hiçbir şey düşülmez — bizim kaynağımız harcanmadı.
  */
-export async function charge(userId: string, usd: number, pooled: boolean): Promise<void> {
+export interface ChargeDetail {
+  feature: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+}
+
+/**
+ * Ücretlendirir VE işlem dökümüne yazar.
+ *
+ * İkisi TEK YERDE: ayrı çağrılsalardı biri başarılı diğeri başarısız olduğunda döküm
+ * ile bakiye birbirini tutmazdı ve itiraz anında hangisinin doğru olduğunu bilemezdik.
+ */
+export async function charge(userId: string, usd: number, pooled: boolean, detail?: ChargeDetail): Promise<void> {
   if (!CLOUD_MODE || !pooled) return;
   try {
     await chargeUsd(userId, usd);
+    await logTx({ userId, kind: "usage", usd, pooled, ...(detail ?? { feature: "unknown" }) });
   } catch (e) {
     // SESSİZ YUTMA YOK: ücretlendirme başarısızsa hizmet bedavaya gitmiş demektir.
     // İstek bozulmamalı ama bu MUTLAKA görünür olmalı, yoksa kaybı hiç fark etmeyiz.

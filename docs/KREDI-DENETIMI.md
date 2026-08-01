@@ -16,7 +16,7 @@
 | 3 | Ücretlendirme hatası sessizce yutuluyordu | Kayıp fark edilmiyor | **Düzeltildi** |
 | 4 | Karşılanamayan kullanım iz bırakmadan siliniyordu | Ölçülemeyen zarar | **Düzeltildi** |
 | 5 | Dosya tabanlı defter çok örnekli çalışmada bozuluyor | Ücretlendirme atlatılabilir | **Çözüldü** (Firestore transaction) |
-| 6 | İşlem dökümü kalıcı değil, kullanıcı göremiyor | Güven / "dolandırıcı" algısı | **Açık** |
+| 6 | İşlem dökümü kalıcı değil, kullanıcı göremiyor | Güven / "dolandırıcı" algısı | **Çözüldü** (kalıcı defter) |
 | 7 | Deneme kredisi hesap açarak sömürülebilir | Bedava kaynak | **Açık** |
 | 8 | Üyelikte üst sınır yok | Öngörülemeyen maliyet | **Çözüldü** (aylık tavan) |
 | 9 | Akış ortasında kesme yok | Bakiyenin katı harcanabiliyor | **Çözüldü** |
@@ -102,8 +102,8 @@ belirlenmeli.
 
 Dört para kaybı düzeltildi ve yanlış yapılandırmayla buluta çıkma yolu kapatıldı.
 
-**M2 (ödeme) ve M3 (bulut) için kalan zorunlu iş:** kalıcı işlem dökümü (madde 6),
-deneme kredisi suistimali (madde 7), iade politikası.
+**M2 (ödeme) ve M3 (bulut) için kalan zorunlu iş:** deneme kredisi suistimali (madde 7),
+iade politikası, ve Firestore sürücüsünün gerçek Firestore'a karşı doğrulanması.
 
 Bunlar bitmeden gerçek para akmamalı.
 
@@ -133,3 +133,28 @@ zorunda değil. Cloud Run'da kimlik doğrulama ADC ile otomatik, anahtar dosyas�
 **Doğrulama:** dosya sürücüsüyle beş senaryo + 20 paralel düşüm testi geçti (kayıp yok).
 **Firestore sürücüsü gerçek bir Firestore'a karşı HENÜZ ÇALIŞTIRILMADI** — yalnızca derleniyor.
 Bu, M3 deploy'unun ilk doğrulama adımı olmalı.
+
+---
+
+## Ek: işlem dökümü (madde 6)
+
+`usagelog.ts` eklendi — ekle-only işlem defteri. Kayıtlar asla güncellenmez veya silinmez;
+iade bile ayrı bir satırdır. Geçmişi değiştirebilen bir defter, defter değildir.
+
+**Tek yazma noktası:** kayıt, paranın hesaptan çıktığı yerde (`gate.charge`) atılır.
+Ücretlendirme ve kayıt ayrı çağrılsaydı biri başarılı diğeri başarısız olduğunda döküm ile
+bakiye birbirini tutmazdı — itiraz anında hangisinin doğru olduğunu bilemezdik.
+
+Yüklemeler ve üyelik de deftere giriyor. Yalnızca harcamayı gösteren tek taraflı bir döküm
+güven vermez; kullanıcı gelen krediyi de görebilmeli.
+
+Uçlar: `GET /v1/usage` ve `GET /v1/account/usage` (tarih, özellik, model, token, tutar + özet).
+
+Saklama sürücü sözleşmesine alındı (`appendTx` / `readTx`): Firestore'da `novaCredits/{uid}/tx`
+alt koleksiyonu, yerelde `~/.nova/usage.jsonl`. Sürücü yazamazsa yerele düşer — defterde
+boşluk olmamalı. JSONL seçildi çünkü her satır bağımsız: bir satır bozulsa tüm döküm çökmüyor.
+
+**Doğrulama:** dört senaryo geçti — kullanıcı ayrımı (b'nin kaydı a'ya sızmıyor), sıralama,
+özet toplamları, süreç yeniden başladıktan sonra okunabilirlik ve bozuk satır dayanıklılığı.
+
+**Kalan:** Unity tarafında bu dökümü gösteren ekran (M1e ile birlikte).

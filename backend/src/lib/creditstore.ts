@@ -33,6 +33,14 @@ export interface CreditStore {
    * bu yüzden `mutate` YAN ETKİSİZ olmalı (log/istek atmamalı).
    */
   update(userId: string, mutate: (a: Account) => void, seed: () => Account): Promise<Account>;
+
+  /**
+   * İŞLEM DÖKÜMÜ (opsiyonel). Sürücü destekliyorsa kayıtları kendi deposunda tutar;
+   * desteklemiyorsa usagelog.ts yerel JSONL dosyasına düşer.
+   * Sürücünün iç alanlarına dışarıdan uzanmamak için sözleşmeye alındı.
+   */
+  appendTx?(userId: string, tx: unknown & { id: string }): Promise<void>;
+  readTx?(userId: string, limit: number): Promise<unknown[]>;
 }
 
 // ---------------------------------------------------------------- dosya sürücüsü
@@ -140,6 +148,16 @@ class FirestoreStore implements CreditStore {
    * Firestore işlemi otomatik yeniden dener — bu yüzden `mutate` saf olmalı.
    * Böylece iki eşzamanlı istek aynı bakiyeyi okuyup üzerine yazamaz.
    */
+  async appendTx(userId: string, tx: any): Promise<void> {
+    await this.db.collection(this.col).doc(userId).collection("tx").doc(tx.id).set(tx);
+  }
+
+  async readTx(userId: string, limit: number): Promise<unknown[]> {
+    const snap = await this.db.collection(this.col).doc(userId).collection("tx")
+      .orderBy("at", "desc").limit(limit).get();
+    return snap.docs.map((d: any) => d.data());
+  }
+
   async update(userId: string, mutate: (a: Account) => void, seed: () => Account): Promise<Account> {
     const ref = this.db.collection(this.col).doc(userId);
     return await this.db.runTransaction(async (tx: any) => {
