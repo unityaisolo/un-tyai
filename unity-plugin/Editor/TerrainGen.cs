@@ -44,6 +44,14 @@ namespace UnityAI
             GameObject root = null;
             try
             {
+                // KÜTÜPHANE EN BAŞTA HAZIRLANIR.
+                // Eskiden bu adım bitkiler saçılmadan hemen önceydi — ama DOKULAR ondan çok
+                // daha erken (adım 2) uygulanıyor. Sonuç: ilk kurulumda textures-raw henüz
+                // inmemiş oluyor, arazi "doku yoksa düz renk" yedeğine düşüyor ve aşırı
+                // parlak/yıkanmış görünüyordu; indirme bitince iş çoktan bitmiş oluyordu.
+                // Artık indirme her şeyden önce tamamlanır.
+                bool libReady = await NovaAssetLibrary.EnsureReadyAsync(log);
+
                 var rnd = new System.Random(seed);
                 float sizeM = Mathf.Clamp(p.size, 150, 1000);
                 float heightScale = p.biome == "valley" ? 80f : p.biome == "hills" ? 35f
@@ -193,10 +201,7 @@ namespace UnityAI
                 // "0 obje yerleşti" ama "17 yerel klasör" gibi çelişkili teşhis çıkıyordu.
                 NovaAssetDownloader.ResetStats();
 
-                // BEKLEYEN sürüm: kütüphane yoksa indirilir ve kurulum ondan sonra devam eder.
-                // Eski sync sürüm indirmeyi ateşleyip devam ediyor, ilk harita hep boş ve
-                // dokusuz çıkıyordu (kullanıcı ancak ikinci denemede doğru sonucu görüyordu).
-                bool libReady = await NovaAssetLibrary.EnsureReadyAsync(log);
+                // libReady metodun EN BAŞINDA hesaplandı (dokulardan önce hazır olmalıydı).
                 if (!libReady)
                 {
                     nTree = nRock = nBush = nFlower = 0;
