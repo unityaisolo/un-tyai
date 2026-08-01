@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { checkAccess, chargeUsd, isPaidFeature, type Feature } from "./credits.js";
+import { checkAccess, chargeUsd, isPaidFeature, requestBudgetUsd, type Feature } from "./credits.js";
 import { getKey } from "./keyvault.js";
 
 /**
@@ -85,6 +85,15 @@ export function charge(userId: string, usd: number, pooled: boolean): void {
     // İstek bozulmamalı ama bu MUTLAKA görünür olmalı, yoksa kaybı hiç fark etmeyiz.
     console.error(`[BILLING] ücretlendirilemedi user=${userId} usd=${usd}:`, e);
   }
+}
+
+/**
+ * Bu isteğin harcayabileceği üst sınır (USD). Akış ortasında kesme için.
+ * Ücretlendirme geçerli değilse (yerel mod veya kullanıcının kendi anahtarı) sonsuz.
+ */
+export function budgetUsd(userId: string, pooled: boolean): number {
+  if (!CLOUD_MODE || !pooled) return Number.POSITIVE_INFINITY;
+  return requestBudgetUsd(userId);
 }
 
 export function cloudMode(): boolean { return CLOUD_MODE; }

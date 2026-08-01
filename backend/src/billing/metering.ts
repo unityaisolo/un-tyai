@@ -60,6 +60,16 @@ function priceFor(model: string): { input: number; output: number } {
   return FALLBACK_PRICE;
 }
 
+/**
+ * Akış SÜRERKEN anlık maliyet tahmini (USD). Ücretlendirme kaydı oluşturmaz.
+ * Akış ortasında bütçe aşımını yakalamak için kullanılır.
+ */
+export function estimateUsd(model: string, inputTokens: number, outputTokens: number, pooled: boolean): number {
+  const price = priceFor(model);
+  const base = (inputTokens / 1e6) * price.input + (outputTokens / 1e6) * price.output;
+  return pooled ? base * (1 + COMMISSION_RATE) : base;
+}
+
 export interface UsageRecord {
   userId: string;
   model: string;

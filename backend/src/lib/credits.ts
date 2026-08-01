@@ -39,6 +39,10 @@ interface Account {
   /** Bakiye yetmediği için karşılanamayan kredi (bkz. chargeUsd). Bir sonraki
    *  yüklemede mahsup edilmeli; şu an yalnızca kaydediliyor ve görünür kılınıyor. */
   debt?: number;
+  /** Üyelik dönemi başlangıcı (ISO) — aylık tavan bundan sayılır. */
+  periodStart?: string;
+  /** Bu dönemde harcanan kredi (aylık tavan kontrolü). */
+  periodSpent?: number;
 }
 
 interface Ledger { version: number; accounts: Record<string, Account> }
@@ -102,6 +106,28 @@ function persist(): void {
   } catch (e) { console.warn("[credits] yazılamadı: " + String(e)); }
 }
 
+/**
+ * ÜYELİK AYLIK TAVANI (kredi). 0 = sınırsız.
+ *
+ * NEDEN VAR: denetimde çıktı — `checkAccess` üyeyi bakiyesi 0 olsa bile geçiriyor,
+ * `chargeUsd` de sıfırda duruyordu. Yani "üye = SINIRSIZ kullanım". Tek bir ağır
+ * kullanıcı, üyelik ücretinin kat kat üstünde model maliyeti çıkarabilirdi ve bunu
+ * durduracak hiçbir mekanizma yoktu.
+ *
+ * Varsayılan $20/ay (20000 kredi). Ücretlendirme modeli netleşince ayarlanır.
+ */
+const MEMBER_MONTHLY_CAP = Math.max(0, Math.floor(Number(process.env.MEMBER_MONTHLY_CREDITS ?? "20000")));
+const PERIOD_MS = 30 * 86_400_000;
+
+/** Dönem dolduysa sayacı sıfırlar. Üyelik tavanı takvim ayı değil, 30 günlük pencere. */
+function rollPeriod(a: Account): void {
+  const started = a.periodStart ? new Date(a.periodStart).getTime() : 0;
+  if (!started || Date.now() - started >= PERIOD_MS) {
+    a.periodStart = new Date().toISOString();
+    a.periodSpent = 0;
+  }
+}
+
 /** Yeni kullanıcıya verilen deneme kredisi (env ile ayarlanır, 0 = kapalı). */
 const SIGNUP_BONUS = Math.max(0, Math.floor(Number(process.env.SIGNUP_BONUS_CREDITS ?? "0")));
 
@@ -139,8 +165,14 @@ export function addCredits(userId: string, credits: number): Account {
 export function setMembership(userId: string, days: number): Account {
   const a = ensure(userId);
   const base = a.until && new Date(a.until).getTime() > Date.now() ? new Date(a.until).getTime() : Date.now();
+  const wasMember = a.plan === "member";
   a.plan = "member";
   a.until = new Date(base + Math.max(1, Math.floor(days)) * 86_400_000).toISOString();
+  // ÜYELİK YENİ BAŞLIYORSA DÖNEMİ SIFIRLA.
+  // Testte çıktı: kullanıcı üye OLMADAN önce harcadıkları da üyelik tavanına
+  // sayılıyordu; parasını ödeyip giren kişi tavanı dolmuş halde başlıyordu.
+  // Uzatmada sıfırlamıyoruz, yoksa her uzatma tavanı yeniler (suistimal).
+  if (!wasMember) { a.periodStart = new Date().toISOString(); a.periodSpent = 0; }
   persist();
   return { ...a };
 }
@@ -158,6 +190,21 @@ export function checkAccess(userId: string, feature: Feature, usingOwnKey: boole
 
   // Kendi anahtarıyla çalışan Kod Ajanı bedava — bizim kaynağımızı kullanmıyor.
   if (!isPaidFeature(feature) && usingOwnKey) return { allowed: true, account };
+
+  // Üyelik: aylık tavan. Tavan dolduysa üyelik sınırsız erişim vermez.
+  if (account.plan === "member" && MEMBER_MONTHLY_CAP > 0) {
+    const a = ensure(userId);
+    rollPeriod(a);
+    if ((a.periodSpent ?? 0) >= MEMBER_MONTHLY_CAP && a.credits <= 0) {
+      persist();
+      return {
+        allowed: false,
+        reason: "Bu ayki üyelik kullanım tavanına ulaştın. Ek kredi yükleyerek devam edebilirsin.",
+        account: { ...a },
+      };
+    }
+    persist();
+  }
 
   if (account.plan !== "member" && account.credits <= 0)
     return {
@@ -183,15 +230,36 @@ export function chargeUsd(userId: string, usd: number): Account {
   // BORÇ GÖRÜNÜR OLSUN: bakiye sıfırda durur (kullanıcıya eksi bakiye göstermeyiz)
   // ama karşılanamayan kısım ayrıca kaydedilir. Eskiden fazlası sessizce siliniyordu;
   // tek bir uzun akış bakiyeden ÇOK fazlasını harcayıp iz bırakmıyordu.
+  rollPeriod(a);
   const short = Math.max(0, c - a.credits);
   a.credits = Math.max(0, a.credits - c);
   a.spent += c;
+  a.periodSpent = (a.periodSpent ?? 0) + c;
   if (short > 0) {
     a.debt = (a.debt ?? 0) + short;
     console.warn(`[BILLING] karşılanamayan kullanım user=${userId} eksik=${short} kredi (toplam borç=${a.debt})`);
   }
   persist();
   return { ...a };
+}
+
+/**
+ * Bu isteğin harcayabileceği ÜST SINIR (USD). Akış ortasında kesme için kullanılır.
+ *
+ * NEDEN GEREKLİ: kapı yalnızca istek BAŞINDA bakiyeye bakıyordu. 1 kredisi olan
+ * kullanıcı çok uzun bir akış başlatıp bakiyesinin kat kat üstünde harcayabiliyordu;
+ * fazlası da sessizce siliniyordu. Artık akış bu sınırı aşınca kesilir.
+ *
+ * Sonsuz döner: ücretlendirme geçerli değilse (yerel mod / kullanıcının kendi anahtarı).
+ */
+export function requestBudgetUsd(userId: string): number {
+  const a = ensure(userId);
+  rollPeriod(a);
+  let credits = a.credits;
+  if (a.plan === "member" && MEMBER_MONTHLY_CAP > 0)
+    credits += Math.max(0, MEMBER_MONTHLY_CAP - (a.periodSpent ?? 0));
+  // Küçük bir tolerans: son parça yarıda kesilmesin, tam bir cümle bitebilsin.
+  return (credits / CREDITS_PER_USD) * 1.05;
 }
 
 export function creditsFile(): string { return FILE; }

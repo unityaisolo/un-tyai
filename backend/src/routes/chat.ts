@@ -2,9 +2,9 @@ import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import type { ChatMessage, ToolCall } from "../providers/types.js";
 import { TOOLS } from "../tools.js";
-import { recordUsage } from "../billing/metering.js";
+import { recordUsage, estimateUsd } from "../billing/metering.js";
 import { resolveTarget } from "../lib/target.js";
-import { gate, charge } from "../lib/gate.js";
+import { gate, charge, budgetUsd } from "../lib/gate.js";
 
 export const chatRouter = Router();
 
@@ -105,6 +105,11 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
     console.log(`[chat] model=${requestedModel}→${model} provider=${provider.id} pooled=${pooled}`);
 
     // Bir beyin turu çalıştırır. Council açıkken tool_call'lar tamponlanır (satır içi gönderilmez).
+    // Bu isteğin harcayabileceği üst sınır. Yerel modda veya kullanıcının kendi
+    // anahtarında sonsuz döner, yani akış hiç kesilmez.
+    const maxUsd = budgetUsd(req.userId, pooled);
+    let budgetExceeded = false;
+
     const runBrain = async (msgs: ChatMessage[]) => {
       let text = "";
       const toolCalls: ToolCall[] = [];
@@ -117,7 +122,18 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
       for await (const ev of provider.chat({ model, messages: msgs, tools, apiKey, baseUrl })) {
         if (ev.type === "token") { split.push(ev.text); }
         else if (ev.type === "tool_call") { toolCalls.push({ id: ev.id, name: ev.name, args: ev.args }); if (!council) send(ev); }
-        else if (ev.type === "usage") { inTok += ev.inputTokens; outTok += ev.outputTokens; send(ev); }
+        else if (ev.type === "usage") {
+          inTok += ev.inputTokens; outTok += ev.outputTokens; send(ev);
+          // AKIŞ ORTASINDA BÜTÇE KONTROLÜ.
+          // Kapı yalnızca istek BAŞINDA bakiyeye bakıyordu; 1 kredisi olan kullanıcı
+          // uzun bir akış başlatıp bakiyesinin kat kat üstünde harcayabiliyordu.
+          // Bütçe aşılırsa akışı burada kesiyoruz — harcanan kadarı yine faturalanır.
+          if (estimateUsd(model, inTok, outTok, pooled) > maxUsd) {
+            send({ type: "error", message: "Kredi sınırına ulaşıldı — yanıt burada kesildi." });
+            budgetExceeded = true;
+            break;
+          }
+        }
         else if (ev.type === "error") { send(ev); throw new Error(ev.message); }
         else if (ev.type === "done") break;
       }
@@ -144,7 +160,9 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
       send({ type: "token", text: "(Model boş yanıt döndürdü — backend terminalindeki [chat] satırını kontrol et. Model emekliye ayrılmış olabilir; .env'e NOVA_FLASH=<güncel-groq-modeli> yazarak değiştirebilirsin.)" });
     }
 
-    if (council && brain.toolCalls.length > 0) {
+    // Bütçe kesildiyse ikinci tur (denetçi + yeniden üretim) YAPILMAZ; aksi halde
+    // kesme işe yaramaz, model ikinci kez çalışıp harcamaya devam ederdi.
+    if (council && !budgetExceeded && brain.toolCalls.length > 0) {
       const userText = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
       const review = await reviewProposal(req.userId, userText, brain.toolCalls, model);
       send({ type: "council", verdict: review.verdict, notes: review.notes });
