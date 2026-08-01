@@ -59,7 +59,7 @@ export async function gate(req: Request, res: Response, feature: Feature): Promi
     return { ok: false, usingOwnKey };
   }
 
-  const g = await checkAccess(req.userId, feature, usingOwnKey);
+  const g = await checkAccess(req.userId, feature, usingOwnKey, req.emailVerified === true);
   if (!g.allowed) {
     res.status(402).json({
       error: g.reason,

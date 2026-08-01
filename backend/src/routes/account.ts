@@ -19,10 +19,11 @@ const CLOUD_MODE = String(process.env.NOVA_CLOUD ?? "").toLowerCase() === "true"
 const ADMIN_SECRET = process.env.ADMIN_SECRET ?? "";
 
 accountRouter.get("/account", async (req: Request, res: Response) => {
-  const a = await getAccount(req.userId);
+  const a = await getAccount(req.userId, req.emailVerified === true);
   res.json({
     cloudMode: CLOUD_MODE,
     authed: req.authed === true,
+    emailVerified: req.emailVerified === true,
     plan: a.plan,
     until: a.until ?? null,
     credits: a.credits,

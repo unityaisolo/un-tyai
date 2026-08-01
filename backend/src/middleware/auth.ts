@@ -18,6 +18,8 @@ declare global {
   namespace Express {
     interface Request {
       userId: string;
+      /** Firebase e-posta doğrulaması yapılmış mı? Deneme kredisi buna bağlı. */
+      emailVerified?: boolean;
       /** true = kimliği Firebase ile DOĞRULANMIŞ (üyelik/kredi bu şarta bağlı) */
       authed?: boolean;
     }
@@ -61,6 +63,7 @@ export async function auth(req: Request, res: Response, next: NextFunction): Pro
       const u = await verifyIdToken(token, FIREBASE_PROJECT);
       req.userId = u.uid;
       req.authed = true;
+      req.emailVerified = u.emailVerified === true;
       applyRateLimit(req, res, next);
       return;
     } catch (e) {

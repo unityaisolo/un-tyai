@@ -40,10 +40,31 @@ export function isPaidFeature(f: string): boolean {
 const MEMBER_MONTHLY_CAP = Math.max(0, Math.floor(Number(process.env.MEMBER_MONTHLY_CREDITS ?? "20000")));
 const PERIOD_MS = 30 * 86_400_000;
 
-/** Yeni kullanıcıya verilen deneme kredisi (0 = kapalı; suistimale açık, bkz. denetim madde 7). */
+/**
+ * DENEME KREDİSİ (0 = kapalı).
+ *
+ * SUİSTİMAL RİSKİ: bonus her yeni `userId` için veriliyor ve Firebase sınırsız e-posta
+ * kaydına izin verir. Hesap üreterek bedava kaynak alınabilir.
+ *
+ * Bu yüzden bonus artık KOŞULLU: yalnızca e-postası DOĞRULANMIŞ hesaba verilir.
+ * Tek başına yeterli bir savunma değil (tek kullanımlık posta servisleri var) ama
+ * maliyeti belirgin şekilde artırır. Gerçek çözüm ödeme yöntemi doğrulaması; o
+ * M2 ile gelecek. Varsayılan yine 0 — açmadan önce bu riski bilerek aç.
+ */
 const SIGNUP_BONUS = Math.max(0, Math.floor(Number(process.env.SIGNUP_BONUS_CREDITS ?? "0")));
 
-const seed = (): Account => ({ credits: SIGNUP_BONUS, plan: "free", spent: 0 });
+/** Bonusu yalnızca doğrulanmış e-postaya ver (varsayılan: evet). */
+const BONUS_NEEDS_VERIFIED_EMAIL =
+  String(process.env.SIGNUP_BONUS_REQUIRE_VERIFIED_EMAIL ?? "true").toLowerCase() !== "false";
+
+const seedFor = (emailVerified: boolean) => (): Account => ({
+  credits: (!BONUS_NEEDS_VERIFIED_EMAIL || emailVerified) ? SIGNUP_BONUS : 0,
+  plan: "free",
+  spent: 0,
+});
+
+/** Doğrulanmamış varsayımıyla tohum — bonus vermeyen güvenli varsayılan. */
+const seed = seedFor(false);
 
 /** Dönem dolduysa sayacı sıfırlar. 30 günlük kayan pencere (takvim ayı değil). */
 function rollPeriod(a: Account): void {
@@ -62,9 +83,10 @@ function expireMembership(a: Account): void {
   }
 }
 
-export async function getAccount(userId: string): Promise<Account> {
+export async function getAccount(userId: string, emailVerified = false): Promise<Account> {
   const s = await store();
-  return await s.update(userId, (a) => { expireMembership(a); rollPeriod(a); }, seed);
+  // Hesap İLK kez burada oluşuyorsa bonus kararı da burada verilir.
+  return await s.update(userId, (a) => { expireMembership(a); rollPeriod(a); }, seedFor(emailVerified));
 }
 
 /** Kredi ekler (ödeme sonrası ya da elle). Negatif verilemez. */
@@ -104,8 +126,8 @@ export interface Gate { allowed: boolean; reason?: string; account: Account }
  * @param usingOwnKey kullanıcının kendi anahtarı olduğuna dair ÖN TAHMİN.
  *        Nihai muhasebe kararı isteği çalıştıran katmanın `pooled` bilgisidir.
  */
-export async function checkAccess(userId: string, feature: Feature, usingOwnKey: boolean): Promise<Gate> {
-  const account = await getAccount(userId);
+export async function checkAccess(userId: string, feature: Feature, usingOwnKey: boolean, emailVerified = false): Promise<Gate> {
+  const account = await getAccount(userId, emailVerified);
 
   // Kendi anahtarıyla çalışan Kod Ajanı bedava — bizim kaynağımızı kullanmıyor.
   if (!isPaidFeature(feature) && usingOwnKey) return { allowed: true, account };

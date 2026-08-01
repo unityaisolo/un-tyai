@@ -17,7 +17,7 @@
 | 4 | Karşılanamayan kullanım iz bırakmadan siliniyordu | Ölçülemeyen zarar | **Düzeltildi** |
 | 5 | Dosya tabanlı defter çok örnekli çalışmada bozuluyor | Ücretlendirme atlatılabilir | **Çözüldü** (Firestore transaction) |
 | 6 | İşlem dökümü kalıcı değil, kullanıcı göremiyor | Güven / "dolandırıcı" algısı | **Çözüldü** (kalıcı defter) |
-| 7 | Deneme kredisi hesap açarak sömürülebilir | Bedava kaynak | **Açık** |
+| 7 | Deneme kredisi hesap açarak sömürülebilir | Bedava kaynak | **Azaltıldı** (doğrulanmış e-posta) |
 | 8 | Üyelikte üst sınır yok | Öngörülemeyen maliyet | **Çözüldü** (aylık tavan) |
 | 9 | Akış ortasında kesme yok | Bakiyenin katı harcanabiliyor | **Çözüldü** |
 | 10 | Borç hiç tahsil edilmiyordu | Kalıcı zarar | **Çözüldü** (yüklemede mahsup) |
@@ -158,3 +158,21 @@ boşluk olmamalı. JSONL seçildi çünkü her satır bağımsız: bir satır bo
 özet toplamları, süreç yeniden başladıktan sonra okunabilirlik ve bozuk satır dayanıklılığı.
 
 **Kalan:** Unity tarafında bu dökümü gösteren ekran (M1e ile birlikte).
+
+---
+
+## Ek: deneme kredisi (madde 7)
+
+Bonus artık yalnızca **e-postası doğrulanmış** hesaba veriliyor
+(`SIGNUP_BONUS_REQUIRE_VERIFIED_EMAIL`, varsayılan açık). Doğrulama bilgisi Firebase
+kimlik jetonundan (`email_verified`) geliyor, yani istemci taklit edemiyor.
+
+**Bu tam bir çözüm değil** — tek kullanımlık e-posta servisleri var. Ama hesap üretmenin
+maliyetini belirgin şekilde artırıyor. Gerçek savunma ödeme yöntemi doğrulaması; M2 ile
+gelecek. Varsayılan bonus hâlâ 0, yani şu an risk zaten yok.
+
+## Ek: iade politikası
+
+Taslak yazıldı: `docs/IADE-POLITIKASI-TASLAK.md`. Kod değil, ticari karar —
+dört maddede onay bekliyor. `logTx` içinde `refund` türü hazır: iade ayrı bir satır
+olarak yazılıyor, geçmiş değiştirilmiyor.
