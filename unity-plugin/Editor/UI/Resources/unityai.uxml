@@ -56,8 +56,8 @@
                     <ui:Button name="btn_plus" text="+" class="icon-btn" tooltip="Görsel, belge ekle veya ekran görüntüsü al" />
                     <ui:Button name="btn_menu" text="≡" class="icon-btn" tooltip="Araçlar: sahneyi tara, hataları düzelt" />
                     <ui:TextField name="chat_input" multiline="true" placeholder-text="Mesaj yaz…" class="chat-input" />
-                    <ui:Button name="submit" text="Gönder ➤" class="submit" />
-                    <ui:Button name="stop" text="■" class="submit stop-btn" style="display: none;" tooltip="Durdur" />
+                    <ui:Button name="submit" text="Gönder" class="submit" />
+                    <ui:Button name="stop" text="Durdur" class="submit stop-btn" style="display: none;" tooltip="Durdur" />
                 </ui:VisualElement>
                 <ui:VisualElement class="controls">
                     <ui:Toggle name="auto_approve" label="Nova kendi uygulasın (Ctrl+Z geri alır)" value="true" class="auto-approve" />
@@ -84,7 +84,7 @@
                     <ui:VisualElement class="vp-corner vp-tr" picking-mode="Ignore" />
                     <ui:VisualElement class="vp-corner vp-bl" picking-mode="Ignore" />
                     <ui:VisualElement class="vp-corner vp-br" picking-mode="Ignore" />
-                    <ui:Label text="● CANLI ÖNİZLEME" class="vp-hud" picking-mode="Ignore" />
+                    <ui:Label text="CANLI ÖNİZLEME" class="vp-hud" picking-mode="Ignore" />
                     <ui:Label name="studio_status" text="Sürükle: döndür · Tekerlek: yakınlaş" class="vp-status" picking-mode="Ignore" />
                 </ui:VisualElement>
                 <ui:VisualElement name="studio_stats" class="stats-panel" />
@@ -99,19 +99,19 @@
                     <ui:DropdownField name="studio_mode" class="studio-mode" tooltip="Üretim modu" />
                 </ui:VisualElement>
                 <ui:VisualElement name="studio_image_row" class="card-row" style="display: none;">
-                    <ui:Button name="studio_img_upload" text="🖼 Yükle" class="ghost-btn" />
-                    <ui:Button name="studio_img_gen" text="✨ Görsel üret" class="ghost-btn" />
+                    <ui:Button name="studio_img_upload" text="Yükle" class="ghost-btn" />
+                    <ui:Button name="studio_img_gen" text="Görsel üret" class="ghost-btn" />
                     <ui:TextField name="studio_image" placeholder-text="veya görsel URL yapıştır" class="studio-image" />
                     <ui:Image name="studio_img_preview" class="img-preview" style="display: none;" />
                 </ui:VisualElement>
                 <ui:VisualElement class="card-row">
                     <ui:TextField name="studio_prompt" placeholder-text="örn: sci-fi combat droid (görsel modda: görsel açıklaması)" class="studio-prompt" />
-                    <ui:Button name="studio_generate" text="Üret ⚡" class="submit" />
+                    <ui:Button name="studio_generate" text="Üret" class="submit" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
             <ui:VisualElement class="studio-actions">
-                <ui:Button name="studio_add" text="✓ Sahneye ekle" class="submit" />
+                <ui:Button name="studio_add" text="Sahneye ekle" class="submit" />
                 <ui:Button name="studio_clear" text="Temizle" class="ghost-btn" />
                 <ui:VisualElement class="spacer" />
             </ui:VisualElement>
@@ -135,7 +135,7 @@
             <ui:Slider name="mat_tiling" label="Tekrar (tiling)" low-value="1" high-value="16" value="2" class="mat-tiling" />
 
             <ui:VisualElement class="studio-inputbar mat-generate">
-                <ui:Button name="mat_generate" text="Üret + uygula ⚡" class="submit" />
+                <ui:Button name="mat_generate" text="Üret + uygula " class="submit" />
                 <ui:Button name="mat_revert" text="↩ Geri al" class="ghost-btn" />
             </ui:VisualElement>
             <ui:Label name="mat_status" text="" class="status" />
@@ -159,64 +159,81 @@
             <!-- ══════════ GRUP: AÇIK DÜNYA (FPS) ══════════ -->
             <ui:VisualElement name="grp_open_world">
 
-            <!-- Arazi: tip + açıklama -->
+            <!--
+              TASARIM: ana ekranda YALNIZCA 4 satır. Kullanıcı ilk haritasını üç seçim ve
+              tek butonla kurabilmeli. Geri kalan her şey Gelişmiş'in içinde.
+              Emoji KULLANMA: Unity'nin editör fontunda yok, eksik glif sonraki harfin
+              üstüne biniyor ("Haritayı kur" → "aritayı kur"). Sahada bu hata çıktı.
+            -->
+
             <ui:DropdownField name="world_type" label="Arazi tipi" class="mat-tiling" />
             <ui:Label name="world_type_hint" text="" class="panel-hint mat-note" />
-
-            <!-- Ayarlar: boyut / engebe / yoğunluk / gökyüzü -->
             <ui:DropdownField name="world_size" label="Boyut" class="mat-tiling" />
-            <ui:Slider name="world_relief" label="Engebe" low-value="0" high-value="1" value="0.5" class="mat-tiling" tooltip="0 = dümdüz ova · 1 = sarp/yüksek rölyef" />
-            <ui:Slider name="world_density" label="Yoğunluk" low-value="0.2" high-value="0.9" value="0.6" class="mat-tiling" />
-            <ui:DropdownField name="world_sky" label="Gökyüzü" class="mat-tiling" />
 
-            <!-- Bileşenler: tek satır -->
-            <ui:VisualElement class="toggle-row">
-                <ui:Toggle name="world_opt_trees" label="Ağaçlar" value="true" class="auto-approve" />
-                <ui:Toggle name="world_opt_bushes" label="Çalılar" value="true" class="auto-approve" />
-                <ui:Toggle name="world_opt_rocks" label="Kayalar" value="true" class="auto-approve" />
-                <ui:Toggle name="world_opt_flowers" label="Çiçekler" value="false" class="auto-approve" />
-                <ui:Toggle name="world_opt_river" label="Irmak" value="false" class="auto-approve" />
-                <ui:Toggle name="world_opt_lake" label="Göl" value="false" class="auto-approve" />
-                <ui:Toggle name="world_opt_path" label="Patika" value="false" class="auto-approve" tooltip="Haritayı boydan boya geçen kıvrımlı toprak yol" />
-                <ui:VisualElement class="spacer" />
-                <ui:Toggle name="world_opt_player" label="Play'e hazır (oyuncu ekle)" value="true" class="auto-approve" tooltip="Harita kurulunca FPS oyuncusu da yerleşir — Play'e bastığında hemen gezebilirsin (kontroller ekranda yazar)." />
-            </ui:VisualElement>
-            <ui:Slider name="world_rivercurve" label="Nehir kıvrımı" low-value="0" high-value="1" value="0.5" class="mat-tiling" tooltip="0 = dümdüz kanal · 1 = güçlü menderes (Irmak açıkken etkili)" />
+            <ui:Button name="world_build" text="Haritayı kur" class="submit mat-generate" />
 
-            <!-- Gelişmiş: rol başına yoğunluk çarpanları + seed -->
-            <ui:Foldout name="world_adv" text="⚙ Gelişmiş" value="false" class="mat-tiling">
-                <ui:Slider name="world_treemul" label="Ağaç oranı ×" low-value="0" high-value="2" value="1" class="mat-tiling" />
-                <ui:Slider name="world_rockmul" label="Kaya oranı ×" low-value="0" high-value="2" value="1" class="mat-tiling" />
-                <ui:Slider name="world_bushmul" label="Çalı oranı ×" low-value="0" high-value="2" value="1" class="mat-tiling" />
-                <ui:VisualElement class="field-row">
-                    <ui:TextField name="world_seed" label="Seed" class="grow" tooltip="Boş = her seferinde rastgele. Beğendiğin haritanın seed'ini buraya yazarsan aynısını yeniden kurar." />
-                    <ui:Button name="world_seed_dice" text="🎲" class="ghost-btn" tooltip="Rastgele seed üret" />
+            <!-- · GELİŞMİŞ: ana akışı bozmayan her şey · -->
+            <ui:Foldout name="world_adv" text="Gelişmiş ayarlar" value="false" class="mat-tiling">
+
+                <ui:Label text="Arazi" class="adv-section" />
+                <ui:Slider name="world_relief" label="Engebe" low-value="0" high-value="1" value="0.5" class="mat-tiling" tooltip="0 = dümdüz ova · 1 = sarp/yüksek rölyef" />
+                <ui:Slider name="world_density" label="Yoğunluk" low-value="0.2" high-value="0.9" value="0.6" class="mat-tiling" />
+                <ui:DropdownField name="world_sky" label="Gökyüzü" class="mat-tiling" />
+
+                <ui:Label text="Doğa" class="adv-section" />
+                <ui:VisualElement class="toggle-grid">
+                    <ui:Toggle name="world_opt_trees" label="Ağaçlar" value="true" />
+                    <ui:Toggle name="world_opt_bushes" label="Çalılar" value="true" />
+                    <ui:Toggle name="world_opt_rocks" label="Kayalar" value="true" />
+                    <ui:Toggle name="world_opt_flowers" label="Çiçekler" value="false" />
                 </ui:VisualElement>
-            </ui:Foldout>
+                <ui:Slider name="world_treemul" label="Ağaç oranı" low-value="0" high-value="2" value="1" class="mat-tiling" />
+                <ui:Slider name="world_rockmul" label="Kaya oranı" low-value="0" high-value="2" value="1" class="mat-tiling" />
+                <ui:Slider name="world_bushmul" label="Çalı oranı" low-value="0" high-value="2" value="1" class="mat-tiling" />
 
-            <!-- Atmosfer: sis / güneş / rüzgâr (kurmadan da uygulanır) -->
-            <ui:Foldout name="world_atmo" text="🌫 Atmosfer" value="false" class="mat-tiling">
-                <ui:VisualElement class="toggle-row">
-                    <ui:Toggle name="world_fog" label="Sis" value="false" class="auto-approve" />
-                    <ui:Toggle name="world_wind" label="Rüzgâr" value="false" class="auto-approve" tooltip="Sahneye WindZone ekler (rüzgâr destekli bitkiler sallanır)" />
+                <ui:Label text="Su ve yol" class="adv-section" />
+                <ui:VisualElement class="toggle-grid">
+                    <ui:Toggle name="world_opt_river" label="Irmak" value="false" />
+                    <ui:Toggle name="world_opt_lake" label="Göl" value="false" />
+                    <ui:Toggle name="world_opt_path" label="Patika" value="false" tooltip="Haritayı boydan boya geçen kıvrımlı toprak yol" />
+                </ui:VisualElement>
+                <!-- Yalnızca Irmak açıkken görünür (kod: UnityAIWindow) -->
+                <ui:Slider name="world_rivercurve" label="Nehir kıvrımı" low-value="0" high-value="1" value="0.5" class="mat-tiling" tooltip="0 = dümdüz kanal · 1 = güçlü menderes" />
+
+                <ui:Label text="Atmosfer" class="adv-section" />
+                <ui:VisualElement class="toggle-grid">
+                    <ui:Toggle name="world_fog" label="Sis" value="false" />
+                    <ui:Toggle name="world_wind" label="Rüzgâr" value="false" tooltip="Sahneye WindZone ekler (rüzgâr destekli bitkiler sallanır)" />
                 </ui:VisualElement>
                 <ui:Slider name="world_fogdens" label="Sis yoğunluğu" low-value="0.001" high-value="0.02" value="0.005" class="mat-tiling" />
                 <ui:DropdownField name="world_sun" label="Güneş" class="mat-tiling" />
+
+                <ui:Label text="Diğer" class="adv-section" />
+                <ui:VisualElement class="toggle-grid">
+                    <ui:Toggle name="world_opt_player" label="Oyuncu ekle" value="true" tooltip="Harita kurulunca FPS oyuncusu da yerleşir — Play'e bastığında hemen gezebilirsin." />
+                </ui:VisualElement>
+                <ui:VisualElement class="field-row">
+                    <ui:TextField name="world_seed" label="Seed" class="grow" tooltip="Boş = her seferinde rastgele. Beğendiğin haritanın seed'ini buraya yazarsan aynısını yeniden kurar." />
+                    <ui:Button name="world_seed_dice" text="Rastgele" class="ghost-btn" tooltip="Rastgele seed üret" />
+                </ui:VisualElement>
             </ui:Foldout>
 
-            <!-- Ana aksiyon + ikincil aksiyonlar -->
-            <ui:Button name="world_build" text="🌍 Haritayı kur" class="submit mat-generate" />
-            <ui:VisualElement class="btn-row">
-                <ui:Button name="world_explore" text="🚶 Gez (FPS)" class="ghost-btn" />
-                <ui:Button name="world_save" text="💾 Projeye kaydet" class="ghost-btn" tooltip="Arazi, dokular ve modeller Assets/Nova/Worlds altına yazılır — Unity kapanınca kaybolmaz." />
-            </ui:VisualElement>
-
-            <!-- T7: Oyuna hazırlık -->
-            <ui:Button name="world_prep" text="🎮 Oyna hazırla" class="submit mat-generate" tooltip="NavMesh bake + oyuncu spawn noktası + üstten minimap PNG'si üretir." />
-            <ui:VisualElement class="toggle-row">
-                <ui:Toggle name="prep_navmesh" label="NavMesh" value="true" class="auto-approve" tooltip="Yapay zekâ/NPC gezintisi için gezilebilir alan hesaplar" />
-                <ui:Toggle name="prep_spawn" label="Spawn noktası" value="true" class="auto-approve" tooltip="Oyuncunun güvenle başlayacağı bir NovaSpawn işareti koyar" />
-                <ui:Toggle name="prep_minimap" label="Minimap" value="true" class="auto-approve" tooltip="Üstten görünüm PNG'sini Assets/Nova/Minimaps altına kaydeder" />
+            <!--
+              KURULUMDAN SONRA: harita yokken bu butonların hiçbir anlamı yok ve ana
+              ekranı kalabalıklaştırıyorlardı. Sahnede Nova arazisi belirene kadar gizli.
+            -->
+            <ui:VisualElement name="world_after" style="display: none;">
+                <ui:Label text="Kurulumdan sonra" class="adv-section" />
+                <ui:VisualElement class="btn-row">
+                    <ui:Button name="world_explore" text="Gez (FPS)" class="ghost-btn" />
+                    <ui:Button name="world_save" text="Projeye kaydet" class="ghost-btn" tooltip="Arazi, dokular ve modeller Assets/Nova/Worlds altına yazılır — Unity kapanınca kaybolmaz." />
+                </ui:VisualElement>
+                <ui:Button name="world_prep" text="Oyna hazırla" class="submit mat-generate" tooltip="NavMesh bake + oyuncu spawn noktası + üstten minimap PNG'si üretir." />
+                <ui:VisualElement class="toggle-grid">
+                    <ui:Toggle name="prep_navmesh" label="NavMesh" value="true" tooltip="Yapay zekâ/NPC gezintisi için gezilebilir alan hesaplar" />
+                    <ui:Toggle name="prep_spawn" label="Spawn noktası" value="true" tooltip="Oyuncunun güvenle başlayacağı bir NovaSpawn işareti koyar" />
+                    <ui:Toggle name="prep_minimap" label="Minimap" value="true" tooltip="Üstten görünüm PNG'sini Assets/Nova/Minimaps altına kaydeder" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             </ui:VisualElement>
@@ -228,7 +245,7 @@
                 <ui:VisualElement class="toggle-row">
                     <ui:Toggle name="runner_play" label="Kurunca hemen oyna (Play)" value="true" class="auto-approve" />
                 </ui:VisualElement>
-                <ui:Button name="game_runner" text="🏃 Sonsuz Koşu kur" class="submit mat-generate" tooltip="Oyuncu + kamera + prosedürel engel/coin. A/D şerit, Space zıpla, S kay, R yeniden başla." />
+                <ui:Button name="game_runner" text="Sonsuz Koşu kur" class="submit mat-generate" tooltip="Oyuncu + kamera + prosedürel engel/coin. A/D şerit, Space zıpla, S kay, R yeniden başla." />
                 <ui:Label name="runner_controls" text="Kontroller: A/D şerit · Space zıpla · S kay · R yeniden başla" class="panel-hint mat-note" />
             </ui:VisualElement>
             <!-- ══════════ /GRUP: SONSUZ KOŞU ══════════ -->
@@ -239,7 +256,7 @@
                 <ui:VisualElement class="toggle-row">
                     <ui:Toggle name="arena_play" label="Kurunca hemen oyna (Play)" value="true" class="auto-approve" />
                 </ui:VisualElement>
-                <ui:Button name="game_arena" text="🎯 Arena kur" class="submit mat-generate" />
+                <ui:Button name="game_arena" text="Arena kur" class="submit mat-generate" />
                 <ui:Label name="arena_controls" text="Kontroller: WASD hareket · Fare bak · Sol tık ateş · Space zıpla · R yeniden" class="panel-hint mat-note" />
             </ui:VisualElement>
 
@@ -249,7 +266,7 @@
                 <ui:VisualElement class="toggle-row">
                     <ui:Toggle name="plat_play" label="Kurunca hemen oyna (Play)" value="true" class="auto-approve" />
                 </ui:VisualElement>
-                <ui:Button name="game_platformer" text="🦘 Platformer kur" class="submit mat-generate" />
+                <ui:Button name="game_platformer" text="Platformer kur" class="submit mat-generate" />
                 <ui:Label name="plat_controls" text="Kontroller: WASD hareket · Space zıpla · R yeniden" class="panel-hint mat-note" />
             </ui:VisualElement>
 
@@ -259,7 +276,7 @@
                 <ui:VisualElement class="toggle-row">
                     <ui:Toggle name="racer_play" label="Kurunca hemen oyna (Play)" value="true" class="auto-approve" />
                 </ui:VisualElement>
-                <ui:Button name="game_racer" text="🏁 Yarış pisti kur" class="submit mat-generate" />
+                <ui:Button name="game_racer" text="Yarış pisti kur" class="submit mat-generate" />
                 <ui:Label name="racer_controls" text="Kontroller: WASD sür · Space el freni (drift) · R piste dön" class="panel-hint mat-note" />
             </ui:VisualElement>
 
@@ -269,13 +286,13 @@
                 <ui:VisualElement class="toggle-row">
                     <ui:Toggle name="td_play" label="Kurunca hemen oyna (Play)" value="true" class="auto-approve" />
                 </ui:VisualElement>
-                <ui:Button name="game_td" text="🗼 Kule savunma kur" class="submit mat-generate" />
+                <ui:Button name="game_td" text="Kule savunma kur" class="submit mat-generate" />
                 <ui:Label name="td_controls" text="Kontroller: Yol kenarına sol tık → kule kur · R yeniden başla" class="panel-hint mat-note" />
             </ui:VisualElement>
 
             <!-- ══════════ GRUP: 2D (yakında) ══════════ -->
             <ui:VisualElement name="grp_2d" style="display: none;">
-                <ui:Label name="twod_soon" text="🚧 2D oyun şablonları (Flappy / platformer / 2D koşu) yakında. Bu tür ayrı bir 2D asset+fizik hattı gerektiriyor — yol haritasında (Faz G2)." class="panel-hint mat-note" />
+                <ui:Label name="twod_soon" text="2D oyun şablonları (Flappy / platformer / 2D koşu) yakında. Bu tür ayrı bir 2D asset+fizik hattı gerektiriyor — yol haritasında (Faz G2)." class="panel-hint mat-note" />
             </ui:VisualElement>
 
             <ui:Label name="world_status" text="Hazır." class="status" />

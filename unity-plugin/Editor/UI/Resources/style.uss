@@ -751,6 +751,46 @@
     margin-bottom: 6px;
 }
 
+/*
+ * TOGGLE IZGARASI — işaret kutusu kendi etiketinin yanında kalsın.
+ *
+ * SORUN: Unity'nin BaseField'ı etikete `min-width: 120px` veriyor. Toggle'lar yan yana
+ * dizilince kutu etiketten 120px uzağa itiliyor ve GÖRSEL OLARAK YANDAKİ etiketin
+ * kutusu gibi görünüyor. Geniş pencerede "Ağaçlar ☑ Çalılar ☑ Kayalar ☐" satırında
+ * hangi kutunun kime ait olduğu anlaşılmıyordu — sahada bildirilen hata buydu.
+ *
+ * ÇÖZÜM: her toggle sabit genişlikte bir "çip"; etiket büyümüyor, kutu hemen yanında.
+ */
+.toggle-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 2px;
+    margin-bottom: 8px;
+}
+.toggle-grid > .unity-toggle {
+    width: 140px;
+    margin-right: 10px;
+    margin-bottom: 4px;
+    font-size: 10px;
+}
+.toggle-grid > .unity-toggle > .unity-base-field__label,
+.toggle-grid > .unity-toggle > .unity-label {
+    min-width: 0;
+    width: auto;
+    flex-grow: 0;
+    flex-shrink: 1;
+    margin-right: 6px;
+    color: var(--muted);
+}
+
+/* Gelişmiş içindeki bölüm başlıkları */
+.adv-section {
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: 10px;
+    margin-bottom: 2px;
+}
+
 /* İkincil butonlar yan yana, eşit genişlikte segment görünümü */
 .btn-row { flex-direction: row; flex-wrap: wrap; margin-top: 2px; }
 .btn-row .ghost-btn { flex-grow: 1; margin-right: 6px; margin-bottom: 4px; }
