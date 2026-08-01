@@ -145,7 +145,7 @@ namespace UnityAI
             try
             {
                 // Şehir tamamen katalog binalarından kurulur — kütüphane şart.
-                if (!NovaAssetLibrary.EnsureReady(log, prompt: true)) return;
+                if (!await NovaAssetLibrary.EnsureReadyAsync(log)) return;   // indirmeyi BEKLE
                 AssetCatalog.Load(null, true);
 
                 // 1) STİL KİLİDİ — şehir tek stil
@@ -331,7 +331,7 @@ namespace UnityAI
             try
             {
                 // Şehir tamamen katalog binalarından kurulur — kütüphane şart.
-                if (!NovaAssetLibrary.EnsureReady(log, prompt: true)) return;
+                if (!await NovaAssetLibrary.EnsureReadyAsync(log)) return;   // indirmeyi BEKLE
                 AssetCatalog.Load(null, true);
 
                 // Stil + aile kilidi (Faz 1 ile aynı mantık)

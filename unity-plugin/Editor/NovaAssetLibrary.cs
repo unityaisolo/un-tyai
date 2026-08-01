@@ -275,9 +275,97 @@ namespace UnityAI
         }
 
         /// <summary>
+        /// Kütüphaneyi hazırlar ve GEREKİRSE İNDİRMEYİ BEKLER.
+        ///
+        /// NEDEN AYRI ASYNC SÜRÜM: senkron <see cref="EnsureReady"/> indirmeyi ateşleyip
+        /// hemen false dönüyordu. Kurulum beklemeden devam ediyor, harita 0 objeyle ve
+        /// dokusuz (düz renk, aşırı parlak) çıkıyordu; indirme bittiğinde iş çoktan
+        /// bitmişti. Kullanıcı ancak İKİNCİ kurulumda doğru sonucu görüyordu — yani
+        /// beta kullanıcısının gördüğü İLK harita her zaman bozuk olacaktı.
+        ///
+        /// Artık tek "Haritayı kur" yeterli: indirme beklenir, sonra kurulum devam eder.
+        /// </summary>
+        public static async Task<bool> EnsureReadyAsync(Action<string> log)
+        {
+            try
+            {
+                var path = ResolveCatalog(false);              // önce sessizce ara
+                if (!string.IsNullOrEmpty(path) && File.Exists(path)) { NoteLazy(path, log); return true; }
+
+                // 0 = Buluttan indir, 1 = Vazgeç, 2 = Klasör seç
+                int choice = EditorUtility.DisplayDialogComplex(
+                    NovaLocale.T("lib.missing.title"),
+                    NovaLocale.T("lib.missing.body", FolderName),
+                    NovaLocale.T("lib.cloudBtn"), NovaLocale.T("dialog.cancel"), NovaLocale.T("lib.missing.pick"));
+
+                if (choice == 1) { log?.Invoke(NovaLocale.T("lib.notReady")); return false; }
+                if (choice == 2)
+                {
+                    var picked = PickFolder();
+                    if (string.IsNullOrEmpty(picked)) { log?.Invoke(NovaLocale.T("lib.notReady")); return false; }
+                    NoteLazy(picked, log);
+                    return true;
+                }
+
+                // ---- Buluttan indir ve BEKLE ----
+                log?.Invoke(NovaLocale.T("lib.downloading"));
+                string reason = null;
+                string cat = await NovaAssetDownloader.DownloadCatalog(s =>
+                {
+                    reason = s; Debug.Log("[Nova] " + s); log?.Invoke(s);
+                });
+
+                if (string.IsNullOrEmpty(cat) || !File.Exists(cat))
+                {
+                    NovaAssetDownloader.ResetCache();
+                    _missCached = false;
+                    bool pick = EditorUtility.DisplayDialog(
+                        NovaLocale.T("lib.dl.failTitle"),
+                        NovaLocale.T("lib.dl.failBody", string.IsNullOrEmpty(reason) ? "?" : reason),
+                        NovaLocale.T("lib.missing.pick"), NovaLocale.T("dialog.cancel"));
+                    if (pick && !string.IsNullOrEmpty(PickFolder())) return true;
+                    log?.Invoke(NovaLocale.T("lib.notReady"));
+                    return false;
+                }
+
+                _missCached = false;
+
+                // Dokular ayrı ve büyük paket: sessizce indirme, sor. Reddederse arazi yine
+                // kurulur ama düz renk görünür — kullanıcı bunu bilerek seçmiş olur.
+                string texRoot = Path.Combine(DownloadRoot, "textures-raw");
+                if (!Directory.Exists(texRoot) &&
+                    EditorUtility.DisplayDialog(NovaLocale.T("lib.dl.texTitle"),
+                                                NovaLocale.T("lib.dl.texBody"),
+                                                NovaLocale.T("lib.dl.texYes"), NovaLocale.T("dialog.cancel")))
+                {
+                    try { await NovaAssetDownloader.DownloadTextures(s => { Debug.Log("[Nova] " + s); log?.Invoke(s); }); }
+                    catch (Exception e) { Debug.LogWarning("[Nova] Doku indirme: " + e.Message); }
+                }
+
+                NoteLazy(cat, log);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Nova] Kütüphane hazırlama hatası: " + e.Message);
+                log?.Invoke(NovaLocale.T("lib.notReady"));
+                return false;
+            }
+        }
+
+        private static void NoteLazy(string catalogPath, Action<string> log)
+        {
+            var root = Path.Combine(Path.GetDirectoryName(catalogPath) ?? "", "assets-raw");
+            if (!Directory.Exists(root)) log?.Invoke(NovaLocale.T("lib.lazyModels"));
+        }
+
+        /// <summary>
         /// Kütüphane hazır mı? Değilse sebebi log'a yazar (kullanıcı ne yapacağını bilsin).
         /// Yalnızca catalog.json şarttır: GLB'ler yerelde yoksa NovaAssetDownloader talep
         /// üzerine buluttan indirir, bu yüzden 'assets-raw' yokluğu hata değil bilgidir.
+        ///
+        /// NOT: indirmeyi BEKLEMEZ. Uzun süren kurulum akışlarında (arazi/oyun şablonları)
+        /// <see cref="EnsureReadyAsync"/> kullan.
         /// </summary>
         public static bool EnsureReady(Action<string> log, bool prompt = true)
         {

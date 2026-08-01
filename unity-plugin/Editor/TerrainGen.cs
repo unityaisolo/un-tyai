@@ -193,7 +193,10 @@ namespace UnityAI
                 // "0 obje yerleşti" ama "17 yerel klasör" gibi çelişkili teşhis çıkıyordu.
                 NovaAssetDownloader.ResetStats();
 
-                bool libReady = NovaAssetLibrary.EnsureReady(log, prompt: true);
+                // BEKLEYEN sürüm: kütüphane yoksa indirilir ve kurulum ondan sonra devam eder.
+                // Eski sync sürüm indirmeyi ateşleyip devam ediyor, ilk harita hep boş ve
+                // dokusuz çıkıyordu (kullanıcı ancak ikinci denemede doğru sonucu görüyordu).
+                bool libReady = await NovaAssetLibrary.EnsureReadyAsync(log);
                 if (!libReady)
                 {
                     nTree = nRock = nBush = nFlower = 0;

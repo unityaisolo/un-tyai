@@ -308,7 +308,7 @@ namespace UnityAI
  else { log?.Invoke(NovaLocale.T("decor.lookAtSceneView")); return; }
 
  // Dekoratör tamamen katalog modellerine dayanır — kütüphane yoksa yapacak iş yok.
- if (!NovaAssetLibrary.EnsureReady(log, prompt: true)) return;
+ if (!await NovaAssetLibrary.EnsureReadyAsync(log)) return;   // indirmeyi BEKLE
 
  AssetCatalog.Load(null, true);
  int seed = new System.Random().Next();
