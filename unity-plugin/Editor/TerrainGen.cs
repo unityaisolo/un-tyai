@@ -64,6 +64,10 @@ namespace UnityAI
                 root = new GameObject($"NovaTerra_{seed}");
                 Undo.RegisterCreatedObjectUndo(root, "Nova: Arazi");
 
+                // Önceki haritanın NavMesh'i sahne verisinde duruyor olabilir; yeni arazinin
+                // altında eski mavi yüzey olarak görünür ve kullanıcı kaldıramaz. Baştan sil.
+                WorldPrep.ClearNavMesh(null);
+
                 // ---- 1) HEIGHTMAP ----
                 log?.Invoke(NovaLocale.T("terrain.shaping"));
                 float ox = (float)rnd.NextDouble() * 1000f, oz = (float)rnd.NextDouble() * 1000f;

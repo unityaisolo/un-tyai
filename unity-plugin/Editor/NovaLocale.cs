@@ -220,6 +220,13 @@ namespace UnityAI
  "Catalog downloaded. You can run the action again now.\n\nModels download from the cloud as they are used.",
  "目录已下载。现在可以重新执行该操作。\n\n模型将在使用时从云端下载。",
  "目錄已下載。現在可以重新執行該操作。\n\n模型將在使用時從雲端下載。" } },
+ { "lib.dl.texTitle", new[]{ "Arazi dokuları indirilsin mi?", "Download terrain textures?", "是否下载地形纹理？", "是否下載地形紋理？" } },
+ { "lib.dl.texBody",  new[]{
+"Çim, kaya ve kum dokuları ayrı bir pakette. İndirmezsen arazi çalışır ama düz renk görünür.\n\nPaket birkaç yüz MB; bir kez inip diskte kalır.",
+"Grass, rock and sand textures ship as a separate pack. Without it the terrain still works but looks flat-coloured.\n\nThe pack is a few hundred MB; it downloads once and stays on disk.",
+"草地、岩石和沙地纹理为单独的包。不下载地形仍可用，但只有纯色。\n\n该包有数百 MB，只需下载一次。",
+"草地、岩石和沙地紋理為單獨的包。不下載地形仍可用，但只有純色。\n\n該包有數百 MB，只需下載一次。" } },
+ { "lib.dl.texYes",   new[]{ "İndir", "Download", "下载", "下載" } },
  { "lib.dl.failTitle", new[]{ "Kütüphane indirilemedi", "Library download failed", "素材库下载失败", "素材庫下載失敗" } },
  { "lib.dl.failBody", new[]{ "İndirme başarısız oldu.\n\nSebep: {0}\n\nEn sık nedeni: Nova sunucusu çalışmıyor. Terminalde 'cd backend' ve 'npm run dev' ile başlatıp tekrar dene.\n\nKütüphane zaten diskindeyse 'Klasör seç' ile gösterebilirsin.",
  "The download failed.\n\nReason: {0}\n\nMost common cause: the Nova server is not running. Start it with 'cd backend' and 'npm run dev', then try again.\n\nIf the library is already on disk, use 'Pick folder'.",

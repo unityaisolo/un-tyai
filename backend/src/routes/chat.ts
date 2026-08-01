@@ -75,6 +75,16 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
   // kalırsa) sağlayıcı "messages.0.tool_call_id gerekli" gibi 400 döner ve sohbet
   // TAMAMEN kilitlenir. Sahipsiz 'tool' mesajlarını burada temizliyoruz.
   const messages = sanitizeHistory(parsed.data.messages as ChatMessage[]);
+
+  // sanitizeHistory HER ŞEYİ eleyebilir (ör. geçmiş tamamen sahipsiz 'tool' mesajıysa).
+  // O durumda sağlayıcıya boş dizi gidiyor ve kullanıcı anlaşılmaz bir sağlayıcı hatası
+  // görüyordu: "groq 400: messages : minimum number of items is 1". Sahada bu çıktı.
+  // Boş isteği hiç göndermeyip anlaşılır bir mesaj dönüyoruz.
+  if (messages.length === 0) {
+    res.status(400).json({ error: "Gönderilecek mesaj yok. Bir şeyler yazıp tekrar dene." });
+    return;
+  }
+
   const tools = toolNames ? TOOLS.filter((t) => toolNames.includes(t.name)) : TOOLS;
 
   // ÖNEMLİ: kapı SSE başlıklarından ÖNCE. writeHead sonrası status/json yazılamaz.

@@ -119,6 +119,44 @@ namespace UnityAI
             }
         }
 
+        /// <summary>
+        /// Sahnedeki NavMesh verisini siler.
+        ///
+        /// NEDEN GEREKLİ: legacy bake, NavMesh'i bir GameObject olarak değil SAHNE VERİSİ
+        /// olarak yazar. Kullanıcı haritayı Hierarchy'den silince mavi NavMesh gizmo'su
+        /// ekranda kalıyor ve nasıl kaldırılacağı hiçbir yerde yazmıyor — sahada tam olarak
+        /// bu yaşandı ("haritayı sildim ama o kaldı"). Ürettiğimiz her şeyin geri alma yolu
+        /// da bizde olmalı.
+        /// </summary>
+        public static bool ClearNavMesh(Action<string> log = null)
+        {
+            try
+            {
+                var t = Type.GetType("UnityEditor.AI.NavMeshBuilder, UnityEditor");
+                var clear = t?.GetMethod("ClearAllNavMeshes", BindingFlags.Public | BindingFlags.Static, null, Type.EmptyTypes, null);
+                if (clear == null)
+                {
+                    log?.Invoke("NavMesh temizleme API'si bulunamadı (Window ▸ AI ▸ Navigation ▸ Clear).");
+                    return false;
+                }
+                clear.Invoke(null, null);
+                log?.Invoke("NavMesh temizlendi.");
+                return true;
+            }
+            catch (Exception e)
+            {
+                log?.Invoke("NavMesh temizleme hatası: " + e.Message);
+                return false;
+            }
+        }
+
+        [MenuItem("UnityAI/NavMesh'i Temizle", false, 204)]
+        private static void MenuClearNavMesh()
+        {
+            if (ClearNavMesh(s => Debug.Log("[Nova] " + s)))
+                Debug.Log("[Nova] Sahnedeki mavi NavMesh görüntüsü kalktı. (Gizmo hâlâ görünüyorsa Scene görünümünde Gizmos'u kapat/aç.)");
+        }
+
         // ---- Minimap: üstten ortografik render → PNG ----
         private static string RenderMinimap(GameObject root, Action<string> log)
         {

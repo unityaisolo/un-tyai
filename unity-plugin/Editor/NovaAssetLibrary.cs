@@ -223,6 +223,21 @@ namespace UnityAI
             if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
                 _missCached = false;                  // arama önbelleğini aç, yol artık var
+
+                // DOKULAR: bu akış eskiden yalnızca katalog + modelleri indiriyordu; doku
+                // paketi sadece 'Kütüphaneyi Buluttan İndir' menüsünden geliyordu. Sonuç:
+                // arazi "doku yoksa düz renk" yedeğine düşüyor ve tek düze yeşil çıkıyordu.
+                // Paket büyük (yüzlerce MB) olduğu için sessizce indirmiyoruz — soruyoruz.
+                string texRoot = Path.Combine(DownloadRoot, "textures-raw");
+                if (!Directory.Exists(texRoot) &&
+                    EditorUtility.DisplayDialog(NovaLocale.T("lib.dl.texTitle"),
+                                                NovaLocale.T("lib.dl.texBody"),
+                                                NovaLocale.T("lib.dl.texYes"), NovaLocale.T("dialog.cancel")))
+                {
+                    try { await NovaAssetDownloader.DownloadTextures(s => Debug.Log("[Nova] " + s)); }
+                    catch (Exception e) { Debug.LogWarning("[Nova] Doku indirme: " + e.Message); }
+                }
+
                 EditorUtility.DisplayDialog(NovaLocale.T("lib.dl.okTitle"), NovaLocale.T("lib.dl.okBody"), "OK");
                 return;
             }
