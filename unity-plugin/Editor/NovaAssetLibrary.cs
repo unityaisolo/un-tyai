@@ -56,7 +56,7 @@ namespace UnityAI
         {
             // 1) Kullanıcının kaydettiği yol
             var saved = SavedPath;
-            if (!string.IsNullOrEmpty(saved) && File.Exists(saved) && !IsDevPathUnderSimulation(saved))
+            if (!string.IsNullOrEmpty(saved) && File.Exists(saved) && !IsDevPathIgnored(saved))
                 return saved;
 
             if (!_missCached)
@@ -73,37 +73,40 @@ namespace UnityAI
         /// <summary>Aramayı sıfırlar (indirme/klasör seçimi sonrası).</summary>
         public static void ForgetSearch() => _missCached = false;
 
-        private const string CleanKey = "UnityAI.SimulateCleanInstall";
+        private const string DevScanKey = "UnityAI.ScanDevFolders";
 
         /// <summary>
-        /// TEMİZ KURULUM SİMÜLASYONU — yalnızca geliştirici için.
+        /// GELİŞTİRİCİ KLASÖRÜ TARAMASI — VARSAYILAN: KAPALI.
         ///
-        /// NEDEN VAR: aşağıdaki adım 4/5 "geliştirici düzeni"ni tarar. Bu, deponun yanında
-        /// çalışırken hayat kurtarıyor ama GELİŞTİRİCİNİN MAKİNESİNDE bulut akışını test
-        /// etmeyi imkânsız kılıyor: yeni bir projede bile tarama repodaki catalog.json'u
-        /// buluyor ve indirme hiç denenmiyor. Sahada tam olarak bu yaşandı — "temiz kurulum"
-        /// sanılan test aslında yerel klasörden okuyordu.
+        /// Aşağıdaki adım 4/5, proje kökünden yukarı doğru repo düzenini (asset-pipeline,
+        /// nova-assets, nominal-agent/…) arar. Bu tarama SADECE deponun yanında çalışan
+        /// geliştirici için anlamlı; son kullanıcının diskinde öyle bir klasör yok.
         ///
-        /// Bu bayrak açıkken yalnızca son kullanıcının görebileceği konumlara bakılır
-        /// (proje içi NovaAssets). Böylece bulut indirme gerçekten sınanır.
+        /// NEDEN VARSAYILAN KAPALI: açıkken geliştiricinin makinesinde bulut akışını test
+        /// etmek imkânsızdı — yepyeni bir projede bile tarama repodaki catalog.json'u
+        /// buluyor, indirme hiç denenmiyordu. Testin doğru çalışması bir menüye basmaya
+        /// bağlıydı ve bu üst üste üç turda unutuldu. Testin geçerliliği insan hafızasına
+        /// bağlı olmamalı: doğru davranış varsayılan olmalı, kolaylık opt-in olmalı.
+        ///
+        /// Açmak için: UnityAI ▸ Geliştirici klasörünü tara.
         /// </summary>
-        public static bool SimulateCleanInstall
+        public static bool ScanDevFolders
         {
-            get => EditorPrefs.GetBool(CleanKey, false);
-            set { EditorPrefs.SetBool(CleanKey, value); _missCached = false; }
+            get => EditorPrefs.GetBool(DevScanKey, false);
+            set { EditorPrefs.SetBool(DevScanKey, value); _missCached = false; }
         }
 
         /// <summary>
-        /// Simülasyon açıkken PROJE DIŞINDAKİ kayıtlı yolu yok say.
+        /// Tarama kapalıyken PROJE DIŞINDAKİ kayıtlı yolu da yok say.
         ///
         /// Neden gerekli: kayıtlı yol aday taramasından ÖNCE kontrol ediliyor. Sadece
         /// taramayı kısıtlamak yetmedi — önceki çalıştırmada kaydedilmiş geliştirici yolu
-        /// hâlâ kazanıyordu ve "temiz kurulum" testi yine yerelden okuyordu. Kayıt
-        /// EditorPrefs'te tutulduğu için proje değiştirmek de temizlemiyor.
+        /// hâlâ kazanıyordu. Kayıt EditorPrefs'te (kullanıcı bazlı) tutulduğu için proje
+        /// değiştirmek de temizlemiyor.
         /// </summary>
-        private static bool IsDevPathUnderSimulation(string path)
+        private static bool IsDevPathIgnored(string path)
         {
-            if (!SimulateCleanInstall) return false;
+            if (ScanDevFolders) return false;
             try
             {
                 string projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
@@ -111,7 +114,7 @@ namespace UnityAI
                 // Proje kökünün altındaysa gerçek bir son-kullanıcı konumudur, kabul et.
                 return !full.StartsWith(Path.GetFullPath(projectRoot), StringComparison.OrdinalIgnoreCase);
             }
-            catch { return true; }   // emin olamıyorsak simülasyonu bozma
+            catch { return true; }   // emin olamıyorsak son-kullanıcı davranışını koru
         }
 
         /// <summary>Aranacak olası konumlar (sırayla).</summary>
@@ -125,8 +128,8 @@ namespace UnityAI
             // 3) Assets altında NovaAssets klasörü (kullanıcı elle koyduysa)
             yield return Path.Combine(Application.dataPath, FolderName, "catalog.json");
 
-            // Temiz kurulum simülasyonu: son kullanıcıda olmayan konumlara BAKMA.
-            if (SimulateCleanInstall) yield break;
+            // Geliştirici düzeni taraması varsayılan KAPALI (bkz. ScanDevFolders).
+            if (!ScanDevFolders) yield break;
 
             // 4) Geliştirici düzeni: proje kökünden yukarı 4 seviye tara.
             //    Unity projesi deponun yanında/içinde/altında olabilir; sabit tek seviye yetmez.
@@ -329,34 +332,30 @@ namespace UnityAI
             ForgetSearch();
             _promptedThisSession = false;
             NovaAssetDownloader.ResetCache();
-            // Sıfırlama TEK BAŞINA yetmiyordu: tarama geliştirici klasörünü anında yeniden
-            // buluyor, bulut akışı yine denenmiyordu. Bu yüzden simülasyonu da açıyoruz.
-            SimulateCleanInstall = true;
-            Debug.Log("[Nova] Asset kütüphanesi kaydı silindi ve TEMİZ KURULUM SİMÜLASYONU açıldı — " +
-                      "geliştirici klasörleri artık taranmıyor, bulut akışı devreye girecek. " +
-                      "İndirme hedefi: " + DownloadRoot + "\n" +
-                      "Kapatmak için: UnityAI ▸ Temiz Kurulum Simülasyonu");
+            Debug.Log("[Nova] Asset kütüphanesi kaydı silindi. Sonraki kurulumda yol yeniden aranacak. " +
+                      "İndirme hedefi: " + DownloadRoot +
+                      "\nGeliştirici klasörü taraması: " + (ScanDevFolders ? "AÇIK" : "kapalı (son kullanıcı davranışı)"));
         }
 
         /// <summary>
-        /// Simülasyonu aç/kapat. Açıkken geliştirici klasörleri taranmaz; kapalıyken
-        /// depo yanındaki catalog.json yeniden bulunur (günlük geliştirme için).
+        /// Depo yanındaki catalog.json'u tarayıp tarama. SADECE geliştirme kolaylığı;
+        /// kapalıyken eklenti son kullanıcıdaki gibi davranır (bulut akışı).
         /// </summary>
-        [MenuItem("UnityAI/Temiz Kurulum Simülasyonu", false, 203)]
-        private static void MenuToggleClean()
+        [MenuItem("UnityAI/Geliştirici klasörünü tara", false, 203)]
+        private static void MenuToggleDevScan()
         {
-            SimulateCleanInstall = !SimulateCleanInstall;
-            SavedPath = "";                 // eski yol kayıtlıysa simülasyonu delerdi
+            ScanDevFolders = !ScanDevFolders;
+            SavedPath = "";                 // eski kayıt yeni ayarı delerdi
             NovaAssetDownloader.ResetCache();
-            Debug.Log(SimulateCleanInstall
-                ? "[Nova] Temiz kurulum simülasyonu AÇIK — yalnızca proje içi NovaAssets klasörüne bakılır."
-                : "[Nova] Temiz kurulum simülasyonu KAPALI — geliştirici klasörleri yeniden taranacak.");
+            Debug.Log(ScanDevFolders
+                ? "[Nova] Geliştirici klasörü taraması AÇIK — depo yanındaki catalog.json kullanılacak."
+                : "[Nova] Geliştirici klasörü taraması KAPALI — son kullanıcı davranışı: bulut akışı.");
         }
 
-        [MenuItem("UnityAI/Temiz Kurulum Simülasyonu", true)]
-        private static bool MenuToggleCleanValidate()
+        [MenuItem("UnityAI/Geliştirici klasörünü tara", true)]
+        private static bool MenuToggleDevScanValidate()
         {
-            Menu.SetChecked("UnityAI/Temiz Kurulum Simülasyonu", SimulateCleanInstall);
+            Menu.SetChecked("UnityAI/Geliştirici klasörünü tara", ScanDevFolders);
             return true;
         }
 
