@@ -809,6 +809,11 @@ namespace UnityAI
  { "terrain.ready", new[]{
  "Harita hazır: {0} · {1:0} m · {2} doğa objesi · {3}.", "Map ready: {0} · {1:0} m · {2} nature object(s) · {3}.",
  "地图已就绪：{0} · {1:0} 米 · {2} 个自然物体 · {3}。", "地圖已就緒：{0} · {1:0} 公尺 · {2} 個自然物體 · {3}。" } },
+ { "terrain.readyNoLib", new[]{
+"Arazi kuruldu ({0} · {1:0} m) ama kütüphane hazır değildi — ağaç/kaya eklenmedi. Kütüphane inince 'Haritayı kur'a tekrar bas.",
+"Terrain built ({0} · {1:0} m) but the library was not ready — no trees/rocks added. Press 'Build map' again once the download finishes.",
+"地形已生成（{0} · {1:0} m），但素材库尚未就绪 —— 未添加树木/岩石。下载完成后请再次点击生成地图。",
+"地形已生成（{0} · {1:0} m），但素材庫尚未就緒 —— 未新增樹木/岩石。下載完成後請再次點擊生成地圖。" } },
  { "terrain.readyNoGltf", new[]{
  "Harita hazır: {0} · {1:0} m (glTFast yok → bitki saçılamadı).", "Map ready: {0} · {1:0} m (glTFast missing → vegetation not scattered).",
  "地图已就绪：{0} · {1:0} 米（缺少 glTFast → 未能生成植被）。", "地圖已就緒：{0} · {1:0} 公尺（缺少 glTFast → 未能產生植被）。" } },

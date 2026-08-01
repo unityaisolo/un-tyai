@@ -184,6 +184,11 @@ namespace UnityAI
                 var rockPal = new List<Tmpl>();
                 var bushPal = new List<Tmpl>();
                 var flowerPal = new List<Tmpl>();
+                // Sayaçları HER kurulumda sıfırla. Eskiden yalnızca kütüphane bulunduğunda
+                // sıfırlanıyordu; kütüphane yokken önceki kurulumun sayıları raporlanıyor,
+                // "0 obje yerleşti" ama "17 yerel klasör" gibi çelişkili teşhis çıkıyordu.
+                NovaAssetDownloader.ResetStats();
+
                 bool libReady = NovaAssetLibrary.EnsureReady(log, prompt: true);
                 if (!libReady)
                 {
@@ -195,7 +200,6 @@ namespace UnityAI
                     AssetCatalog.Load(null, true);
                     // TEŞHİS: kütüphane nereden okunuyor? (yerel geliştirici klasörü mü,
                     // proje içi bulut indirmesi mi) — beta destek sorularının çoğu bu.
-                    NovaAssetDownloader.ResetStats();
                     Debug.Log("[Nova] Katalog: " + UnityAIConfig.CatalogPath);
                     log?.Invoke(NovaLocale.T("terrain.naturePalette"));
                     // KÜRATÖR BEYİN: aday listesi backend'e (/v1/world/curate) gider, LLM biome'a
@@ -262,8 +266,16 @@ namespace UnityAI
                 // AI görsel denetim KALDIRILDI (2026-07): vision modeli JSON yerine muhakeme
                 // metni döndürüyordu, her kurulumda boşuna token harcıyordu. Deterministik
                 // SceneLint denetimi (yukarıdaki `lint`) zaten çalışıyor ve işe yarıyor.
-                string done = NovaLocale.T("terrain.ready", BiomeName(p.biome), sizeM, placed, lint);
-                log?.Invoke(NovaLocale.T("world.status.mapReadyExplore", done));
+                // Kütüphane yoksa "Harita hazır" DEME. Arazi kuruldu ama bitki/kaya yok;
+                // kullanıcı "hazır" yazısını görüp işin bittiğini sanıyordu. Doğru mesaj:
+                // ne olduğunu ve ne yapması gerektiğini söyle.
+                if (!libReady)
+                    log?.Invoke(NovaLocale.T("terrain.readyNoLib", BiomeName(p.biome), sizeM));
+                else
+                {
+                    string done = NovaLocale.T("terrain.ready", BiomeName(p.biome), sizeM, placed, lint);
+                    log?.Invoke(NovaLocale.T("world.status.mapReadyExplore", done));
+                }
 #else
                 log?.Invoke(NovaLocale.T("terrain.readyNoGltf", BiomeName(p.biome), sizeM));
                 await Task.CompletedTask;
